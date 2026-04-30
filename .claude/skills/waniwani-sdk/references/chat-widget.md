@@ -234,33 +234,149 @@ Tracking is fire-and-forget -- failures never break the chat.
 
 ## Embed Script (Non-React)
 
-For non-React sites, use the embed script with Shadow DOM for CSS isolation:
+Self-contained IIFE bundle (~186KB gzipped) with React bundled. Drop a `<script>` tag on any website to get a floating chat bubble. Uses Shadow DOM for CSS isolation.
 
-### Script Tag
+### Prerequisites
+
+1. Generate embed token in WaniWani dashboard (Environment → Embed → Generate Token)
+
+No MCP app changes needed — the embed talks to WaniWani API directly.
+
+### Script Tag (declarative)
+
+Default mode is `inline` — the chat mounts into the first `[data-waniwani-embed]` element on the page:
 
 ```html
+<div data-waniwani-embed style="width: 400px; height: 600px;"></div>
+
 <script
-  src="https://cdn.waniwani.ai/chat/embed.js"
-  data-api-key="ww_..."
+  src="https://cdn.jsdelivr.net/npm/@waniwani/sdk@latest/dist/chat/embed.js"
+  defer
+  data-token="wwp_..."
   data-title="Support"
   data-welcome-message="Hi! How can I help?"
   data-primary-color="#6366f1"
 ></script>
 ```
 
+For a floating bubble instead, add `data-mode="floating"`.
+
+### Script Tag Options
+
+| Attribute | Required | Description |
+|-----------|----------|-------------|
+| `data-api` | No | Chat API URL (defaults to `https://app.waniwani.ai/api/mcp/chat`) |
+| `data-token` | Yes | Embed token (`wwp_...`) from WaniWani dashboard |
+| `data-title` | No | Chat header title (default: `"Assistant"`) |
+| `data-welcome-message` | No | Greeting shown before first message |
+| `data-placeholder` | No | Input field placeholder text |
+| `data-suggestions` | No | Comma-separated suggestion chips |
+| `data-position` | No | `"bottom-right"` (default) or `"bottom-left"` |
+| `data-mode` | No | `"inline"` (default), `"floating"`, or `"custom"`. See [Display modes](#display-modes) below. |
+| `data-layout` | No | In `inline` mode: `"card"` (default), `"bar"`, or `"embed"`. Picks the layout component. Ignored in other modes. |
+| `data-width` | No | Panel width in px (default: `400`) |
+| `data-height` | No | Panel height in px (default: `600`) |
+| `data-css` | No | URL to custom stylesheet (injected into Shadow DOM) |
+| `data-primary-color` | No | Primary color hex |
+| `data-background-color` | No | Background color hex |
+| `data-text-color` | No | Text color hex |
+| `data-font-family` | No | Font family |
+
+### Display Modes
+
+Pick how the widget appears with `data-mode` (or `mode` in `init()`):
+
+| Mode | Behaviour | Use when |
+|---|---|---|
+| `inline` (default) | Layout component renders directly into the first `[data-waniwani-embed]` element on the page. No bubble, no panel, no overlay. | You want the chat embedded as a block on a page (e.g. landing page hero). |
+| `floating` | SDK renders a floating bubble bottom-right/left; clicking it toggles a popover panel. | Standard drop-in chat bubble. |
+| `custom` | Popover panel only — no bubble. Consumer renders their own launcher and calls `WaniWani.chat.open()` / `toggle()`. | You want the bubble replaced by a branded button, nav item, etc. |
+
+#### Inline mode
+
+Place a marker element anywhere on the page — the SDK mounts into it:
+
+```html
+<div data-waniwani-embed style="width: 400px; height: 600px;"></div>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@waniwani/sdk@latest/dist/chat/embed.js"
+  defer
+  data-token="wwp_..."
+  data-mode="inline"
+></script>
+```
+
+Pick the layout with `data-layout` (inline only):
+
+| Value | Component | Shape |
+|---|---|---|
+| `card` (default) | `ChatCard` | Bordered card with header, messages, input. |
+| `bar` | `ChatBar` | Compact input bar that expands upward on focus. |
+| `embed` | `ChatEmbed` | Borderless, fills parent container (no header). |
+
+```html
+<div data-waniwani-embed style="width: 600px; height: 80px;"></div>
+<script src=".../embed.js" defer
+  data-token="wwp_..."
+  data-mode="inline"
+  data-layout="bar"
+></script>
+```
+
+#### Custom launcher
+
+Set `data-mode="custom"` to suppress the built-in bubble. The panel still mounts (hidden) and opens via `WaniWani.chat.open()`:
+
+```html
+<script
+  src="https://cdn.jsdelivr.net/npm/@waniwani/sdk@latest/dist/chat/embed.js"
+  defer
+  data-token="wwp_..."
+  data-mode="custom"
+></script>
+
+<button onclick="WaniWani.chat.toggle()">Chat with us</button>
+```
+
+`open`, `close`, and `toggle` are exposed on the instance returned by `init()` and on `window.WaniWani.chat`. They're no-ops in `inline` mode (nothing to open).
+
 ### Programmatic Init
 
 ```js
-const chat = window.WaniWani.chat.init({
-  apiKey: "ww_...",
-  title: "Support",
-  container: document.getElementById("chat-container"),
-  theme: { primaryColor: "#6366f1" },
-});
+<script src="https://cdn.jsdelivr.net/npm/@waniwani/sdk@latest/dist/chat/embed.js" defer></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    var chat = window.WaniWani.chat.init({
+      token: 'wwp_...',
+      title: 'Support',
+      theme: { primaryColor: '#6366f1' },
+    });
 
-// Cleanup
-chat.destroy();
+    // Imperative control (floating mode only)
+    chat.open();
+    chat.close();
+    chat.toggle();
+
+    // Cleanup
+    chat.destroy();
+  });
+</script>
 ```
+
+### How Auth Works
+
+The embed widget sends `Authorization: Bearer wwp_...` on every request directly to the WaniWani API. The token is verified server-side against the `embed_tokens` table. No customer MCP app changes needed — generate tokens in the dashboard, paste the `<script>` tag.
+
+### Remote Config
+
+On mount the widget fetches `GET {data-api}/config` with the embed token and merges the response into its settings. Configure the agent from the WaniWani dashboard (environment → Embed Chat Config):
+
+| Server-only | Display-only |
+|---|---|
+| `systemPrompt`, `maxSteps` — applied at inference, never leak to the browser | `title`, `welcomeMessage`, `placeholder`, `suggestions` — sent to the widget |
+
+Merge order (later wins): **defaults < remote config < `data-*` attrs < programmatic `init()`**. So the dashboard value is the default and data-attrs still override per-page if you need a local tweak.
 
 ## Additional Components
 

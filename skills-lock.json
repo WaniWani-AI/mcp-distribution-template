@@ -9,7 +9,8 @@
     "waniwani-sdk": {
       "source": "WaniWani-AI/sdk",
       "sourceType": "github",
-      "computedHash": "678cd1b2712a2d3fb6c2a50dec2a22ffec658c209e12b86f52200dff2cf69941"
+      "skillPath": "skills/waniwani-sdk/SKILL.md",
+      "computedHash": "fd0b98ef1d6c60c730d62dd7165c9d4e845c20aca89e971590c1034e4625ce60"
     }
   }
 }
