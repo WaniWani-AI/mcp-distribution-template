@@ -2,7 +2,7 @@
 
 A template for building MCP servers with [Skybridge](https://docs.skybridge.tech) and [WaniWani](https://waniwani.com/) — guided conversation flows, interactive widgets, and analytics, deployable to either [Alpic](https://alpic.ai/) or [Vercel](https://vercel.com/).
 
-The repo ships with a small reference implementation (a ski-lesson booking flow with two widgets) so you can run it end-to-end before stripping it out and writing your own.
+The repo ships with a minimal reference flow (an investment-portfolio picker — three nodes, one widget) so you can run it end-to-end before stripping it out and writing your own.
 
 ## What's inside
 
@@ -51,13 +51,11 @@ The MCP server in [`server/`](server/) is platform-agnostic. Pick a target:
 
 ### Alpic (long-running Node, stateful sessions)
 
-```bash
-npm run deploy
-```
-
-Or one-click clone:
+One-click clone:
 
 [![Deploy on Alpic](https://assets.alpic.ai/button.svg)](https://app.alpic.ai/new/clone?repositoryUrl=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
+
+Or build locally with `npm run build:alpic` and follow the [Alpic CLI docs](https://docs.alpic.ai/).
 
 ### Vercel (serverless)
 

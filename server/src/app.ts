@@ -2,84 +2,48 @@ import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
 import { z } from "zod";
-import { skiLessonsFlow } from "./journey/index.js";
+import { portfolioPickerFlow } from "./journey/index.js";
 
-const lessonPlanSchema = z.object({
-	id: z.enum(["private", "small_group", "family"]),
+const portfolioSchema = z.object({
+	id: z.enum(["conservative", "balanced", "growth"]),
 	name: z.string(),
 	tagline: z.string(),
-	durationMinutes: z.number(),
-	priceEur: z.number(),
-	perks: z.array(z.string()),
+	targetReturn: z.string(),
+	riskLevel: z.string(),
+	assetMix: z.string(),
+	highlights: z.array(z.string()),
 });
 
 export const server = new McpServer(
 	{
-		name: "alpic-x-waniwani-app",
+		name: "mcp-distribution-template",
 		version: "0.0.1",
 	},
 	{ capabilities: {} },
 )
 	.registerWidget(
-		"select-lesson-plan",
+		"select-portfolio",
 		{
 			description:
-				"You MUST call this tool to display the lesson plan selector widget. It shows three curated ski lesson plans for the skier to pick from. The widget renders all plan details, prices, and perks — do NOT list or repeat them in text.",
+				"You MUST call this tool to display the investment portfolio picker. It shows three portfolio options for the user to pick from. The widget renders all portfolio details (target return, risk, asset mix, highlights) — do NOT list or repeat them in text.",
 		},
 		{
 			inputSchema: {
-				level: z.string().describe("The skier's level."),
-				groupSize: z.number().describe("How many people are skiing."),
-				date: z.string().describe("The lesson date."),
-				time: z.string().describe("Morning or afternoon."),
-				goals: z.string().describe("What the skier wants to work on."),
-				plans: z
-					.array(lessonPlanSchema)
-					.describe("Three curated lesson plans."),
-			},
-			annotations: {
-				readOnlyHint: true,
-				openWorldHint: false,
-				destructiveHint: false,
-			},
-		},
-		async ({ level, groupSize, date, time, goals, plans }) => {
-			return {
-				structuredContent: { level, groupSize, date, time, goals, plans },
-				content: [
-					{
-						type: "text",
-						text: `Showing ${plans.length} lesson plan options.`,
-					},
-				],
-				isError: false,
-			};
-		},
-	)
-	.registerWidget(
-		"ski-pass-confirmation",
-		{
-			description:
-				"You MUST call this tool to display the finalized ski pass confirmation card. The widget renders the full booking details, QR code, instructor, meeting point, and weather — do NOT repeat any of these in text.",
-		},
-		{
-			inputSchema: {
-				bookingRef: z.string().describe("Booking reference code."),
-				level: z.string().describe("The skier's level."),
-				groupSize: z.number().describe("How many people are skiing."),
-				date: z.string().describe("Lesson date."),
-				time: z.string().describe("Morning or afternoon."),
-				goals: z.string().describe("What the skier wants to work on."),
-				lessonPlan: z.string().describe("The selected lesson plan name."),
-				lessonTagline: z.string().describe("The plan's tagline."),
-				durationMinutes: z.number().describe("Lesson duration in minutes."),
-				priceEur: z.number().describe("Price in euros."),
-				instructor: z.string().describe("Assigned instructor name."),
-				instructorStyle: z
+				goal: z
 					.string()
-					.describe("Short blurb about the instructor."),
-				meetingPoint: z.string().describe("Where to meet the instructor."),
-				weather: z.string().describe("Weather forecast line."),
+					.optional()
+					.describe("What the user is investing for, in their own words."),
+				horizon: z
+					.string()
+					.optional()
+					.describe("Investment time horizon: short, medium, or long."),
+				riskTolerance: z
+					.string()
+					.optional()
+					.describe("User's risk tolerance: conservative, balanced, or growth."),
+				portfolios: z
+					.array(portfolioSchema)
+					.describe("Three portfolio options to display."),
 			},
 			annotations: {
 				readOnlyHint: true,
@@ -87,13 +51,13 @@ export const server = new McpServer(
 				destructiveHint: false,
 			},
 		},
-		async (input) => {
+		async ({ goal, horizon, riskTolerance, portfolios }) => {
 			return {
-				structuredContent: input,
+				structuredContent: { goal, horizon, riskTolerance, portfolios },
 				content: [
 					{
 						type: "text",
-						text: `Booking ${input.bookingRef} confirmed — ${input.lessonPlan} with ${input.instructor} on ${input.date}.`,
+						text: `Showing ${portfolios.length} portfolio options.`,
 					},
 				],
 				isError: false,
@@ -101,9 +65,9 @@ export const server = new McpServer(
 		},
 	)
 	.registerTool(
-		skiLessonsFlow.name,
-		skiLessonsFlow.config,
-		skiLessonsFlow.handler,
+		portfolioPickerFlow.name,
+		portfolioPickerFlow.config,
+		portfolioPickerFlow.handler,
 	);
 
 withWaniwani(server);

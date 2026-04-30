@@ -1,249 +1,166 @@
 import { createFlow, END, START } from "@waniwani/sdk/mcp";
 import { z } from "zod";
-import {
-	generateBookingRef,
-	INSTRUCTORS,
-	MEETING_POINTS,
-	pick,
-	WEATHER_FORECASTS,
-} from "./utils.js";
 
-// ---------- Lesson plan catalog ----------
+// ---------- Portfolio catalog ----------
 
-type LessonPlanId = "private" | "small_group" | "family";
+type PortfolioId = "conservative" | "balanced" | "growth";
 
-type LessonPlan = {
-	id: LessonPlanId;
+type Portfolio = {
+	id: PortfolioId;
 	name: string;
 	tagline: string;
-	durationMinutes: number;
-	priceEur: number;
-	perks: string[];
+	targetReturn: string;
+	riskLevel: string;
+	assetMix: string;
+	highlights: string[];
 };
 
-function buildPlans(groupSize: number, level: string): LessonPlan[] {
-	return [
-		{
-			id: "private",
-			name: "Private Masterclass",
-			tagline: "1-on-1 coaching, fully tailored",
-			durationMinutes: 180,
-			priceEur: 320,
-			perks: [
-				"Dedicated senior instructor",
-				"Video review of your runs",
-				"Flexible meeting point",
-			],
-		},
-		{
-			id: "small_group",
-			name: "Small Group Workshop",
-			tagline: `Max 4 skiers · all ${level}`,
-			durationMinutes: 150,
-			priceEur: 145,
-			perks: [
-				"Grouped by level, not by age",
-				"Technique drills + guided runs",
-				"Après-ski hot chocolate",
-			],
-		},
-		{
-			id: "family",
-			name: "Family Adventure",
-			tagline:
-				groupSize > 1
-					? `Perfect for your group of ${groupSize}`
-					: "Kids + parents, one crew",
-			durationMinutes: 210,
-			priceEur: 280,
-			perks: [
-				"Mixed-ability friendly",
-				"Photo stop at the panoramic lookout",
-				"Kid-sized lunch included",
-			],
-		},
-	];
-}
+const PORTFOLIOS: Portfolio[] = [
+	{
+		id: "conservative",
+		name: "Conservative",
+		tagline: "Steady growth, lower volatility",
+		targetReturn: "~4% / yr",
+		riskLevel: "Low",
+		assetMix: "70% bonds · 30% equities",
+		highlights: [
+			"Capital preservation focus",
+			"Investment-grade bond portfolio",
+			"Quarterly automatic rebalancing",
+		],
+	},
+	{
+		id: "balanced",
+		name: "Balanced",
+		tagline: "Even mix of growth and stability",
+		targetReturn: "~7% / yr",
+		riskLevel: "Medium",
+		assetMix: "55% equities · 35% bonds · 10% alternatives",
+		highlights: [
+			"Globally diversified equities",
+			"Defensive bond allocation",
+			"Dynamic risk management",
+		],
+	},
+	{
+		id: "growth",
+		name: "Growth",
+		tagline: "Long-term wealth, higher volatility",
+		targetReturn: "~10% / yr",
+		riskLevel: "High",
+		assetMix: "85% equities · 10% alternatives · 5% bonds",
+		highlights: [
+			"Heavy equity tilt for compounding",
+			"Emerging markets and small-cap exposure",
+			"Built for 10+ year horizons",
+		],
+	},
+];
 
 // ---------- Flow ----------
 
-export const skiLessonsFlow = createFlow({
-	id: "ski_lessons",
-	title: "Book a Ski Lesson",
+export const portfolioPickerFlow = createFlow({
+	id: "investment_portfolio",
+	title: "Pick an Investment Portfolio",
 	description:
-		"Book a personalized ski lesson from an alpine concierge. Use whenever a user mentions wanting to book, reserve, or plan ski lessons — solo, with a partner, or as a family. TONE: warm, knowledgeable, slightly upscale alpine concierge. React with genuine enthusiasm to what the user shares ('Chamonix in February — great call!', 'Love that your kids are ready to carve!'). Never feel like a form. Match the user's language.",
+		"Help the user pick an investment portfolio that fits their goals, time horizon, and risk tolerance. Use whenever a user mentions wanting to invest, save toward a goal, or compare portfolio options. TONE: warm, knowledgeable, plain-English — never pushy or jargon-heavy. React naturally to what the user shares.",
 	state: {
-		level: z
-			.enum(["beginner", "intermediate", "advanced", "expert"])
-			.describe(
-				"The skier's self-reported level. Infer from context when possible (e.g. 'first time on skis' → beginner, 'I ski blacks' → advanced).",
-			),
-		groupSize: z
-			.number()
-			.int()
-			.min(1)
-			.max(12)
-			.describe(
-				"Number of people in the lesson. Infer from mentions of family members, couples, solo, etc. Defaults to 1 if the user is clearly alone.",
-			),
-		date: z
+		goal: z
 			.string()
 			.describe(
-				"The date of the lesson, in human-readable form (e.g. 'Saturday 14 Feb', 'next weekend', 'Feb 14'). Keep it the way the user said it.",
+				"What the user is investing for, in their own words (e.g. 'save for a house down payment', 'retirement', 'build long-term wealth'). Short sentence.",
 			),
-		time: z
-			.enum(["morning", "afternoon"])
-			.describe("Preferred time of day for the lesson."),
-		goals: z
-			.string()
+		horizon: z
+			.enum(["short", "medium", "long"])
 			.describe(
-				"What the skier wants to work on or get out of the lesson (e.g. 'work on carving', 'build confidence on reds', 'first time on snow'). Short sentence, user's words.",
+				"Investment time horizon. 'short' = under 3 years, 'medium' = 3 to 10 years, 'long' = 10+ years. Infer from context (e.g. 'house in 2 years' → short, 'retiring in 25 years' → long).",
 			),
-		lessonPlan: z
-			.enum(["private", "small_group", "family"])
+		riskTolerance: z
+			.enum(["conservative", "balanced", "growth"])
 			.describe(
-				"The lesson plan the user picked from the selector widget. Do NOT set this before the user clicks a plan or says which one they want.",
+				"How much volatility the user is comfortable with. Infer from their words: 'I don't want to lose money' → conservative, 'I'm OK with ups and downs' → balanced, 'I want max returns' → growth.",
+			),
+		selectedPortfolio: z
+			.enum(["conservative", "balanced", "growth"])
+			.describe(
+				"The portfolio the user picked from the selector widget. Do NOT set this before the user clicks a card or names one.",
 			),
 	},
 })
-	// Step 1: open-ended welcome — extract as much as possible in one shot
+	// Step 1: open-ended welcome — extract whatever the user volunteers
 	.addNode("welcome", ({ interrupt }) => {
 		return interrupt({
-			goals: {
+			goal: {
 				question:
-					"Tell me about your ski trip — who's skiing and what are you hoping to work on?",
-				context: `This is the first message of a premium ski-school concierge experience. Greet the user warmly and ask ONE open-ended question — do NOT list fields, do NOT ask multiple questions in a row.
+					"What are you looking to invest for, and what's your timeline like?",
+				context: `This is the first message of an investment-portfolio picker. Greet the user warmly and ask ONE open-ended question — do NOT list fields, do NOT ask multiple questions in a row.
 
-Something like: "Welcome to Alpine School! I'd love to help you book a lesson. Tell me a bit about your trip — who's skiing, what level you're at, when you're there, and what you'd love to work on. Share as much or as little as you'd like :)"
+Something like: "Hey! I'd love to help you find a portfolio that fits. What are you looking to invest for, and what's your timeline like?"
 
 From the user's response, extract into stateUpdates whatever they naturally share:
-- level: "beginner" | "intermediate" | "advanced" | "expert" — infer from their words ("never skied" → beginner, "I ski blacks no problem" → advanced, "I can link turns on blues" → intermediate)
-- groupSize: number of people (couples → 2, "me and my two kids" → 3, solo → 1). Infer confidently.
-- date: the date as the user said it — keep it natural ("next Saturday", "Feb 14", "this weekend")
-- time: "morning" or "afternoon" if mentioned
-- goals: a short sentence describing what they want to work on, in the user's own words (e.g. "work on carving", "build confidence on reds", "first time on snow with the kids")
+- goal: a short sentence in their own words ("saving for a house", "retirement", "general wealth-building")
+- horizon: "short" (<3y), "medium" (3-10y), or "long" (10y+) — infer from any timing they mention
+- riskTolerance: "conservative" | "balanced" | "growth" — only set if they clearly signal it ("I don't want to lose money" → conservative, "I want max returns" → growth)
 
-Only extract fields the user clearly mentioned — do NOT guess. The next step will ask naturally for anything missing.`,
+Only extract fields the user clearly mentioned — do NOT guess. The next step will gather what's missing.`,
 			},
 		});
 	})
 
-	// Step 2: conversational follow-up for whatever's missing
-	.addNode("gather_details", ({ state, interrupt }) => {
+	// Step 2: single conversational follow-up for whatever's missing
+	.addNode("clarify", ({ state, interrupt }) => {
 		return interrupt(
 			{
-				...(!state.level
+				...(!state.horizon
 					? {
-							level: {
-								question: "What level would you say you're at?",
-								suggestions: ["beginner", "intermediate", "advanced", "expert"],
+							horizon: {
+								question: "When do you think you'll need the money?",
+								suggestions: [
+									"short (under 3 years)",
+									"medium (3-10 years)",
+									"long (10+ years)",
+								],
 							},
 						}
 					: {}),
-				...(!state.groupSize
+				...(!state.riskTolerance
 					? {
-							groupSize: {
-								question: "How many people will be skiing?",
-							},
-						}
-					: {}),
-				...(!state.date
-					? {
-							date: {
-								question: "What day were you thinking?",
-							},
-						}
-					: {}),
-				...(!state.time
-					? {
-							time: {
-								question: "Morning or afternoon session?",
-								suggestions: ["morning", "afternoon"],
-							},
-						}
-					: {}),
-				...(!state.goals
-					? {
-							goals: {
-								question: "And what would you love to get out of the lesson?",
+							riskTolerance: {
+								question: "How do you feel about market ups and downs?",
+								suggestions: ["conservative", "balanced", "growth"],
 							},
 						}
 					: {}),
 			},
 			{
-				context: `You're having a natural conversation — NOT filling out a form. React warmly to what the user shared in the welcome step before asking the next thing. Ask only ONE OR TWO of the missing questions at a time, weave them in conversationally.
+				context: `React warmly to what the user just shared, then ask only the missing pieces conversationally — NOT a form. Weave the questions into a natural follow-up.
 
 Good follow-ups:
-- "Chamonix next weekend — great pick! Who's skiing with you?"
-- "Got it, three of you. And are you all at a similar level, or mixed?"
-- "Love it! Morning or afternoon — when does the family usually get going?"
+- "Saving for a house — love that. Are you thinking a couple of years out, or a bit further?"
+- "30 years to retirement gives you a ton of room. How do you feel about market swings — would you rather play it safe or aim for higher returns?"
 
-FORMATTING: flowing prose, never bullet points or numbered lists. Each question should feel like part of a natural paragraph.`,
+FORMATTING: flowing prose, never bullet points. Match the user's energy.`,
 			},
 		);
 	})
 
-	// Step 3: show the lesson plan picker widget
-	.addNode("show_lesson_plans", ({ state, showWidget }) => {
-		const plans = buildPlans(
-			state.groupSize ?? 1,
-			state.level ?? "intermediate",
-		);
-
-		return showWidget("select-lesson-plan", {
-			field: "lessonPlan",
+	// Step 3: show the portfolio picker — terminal node
+	.addNode("show_portfolios", ({ state, showWidget }) => {
+		return showWidget("select-portfolio", {
+			field: "selectedPortfolio",
 			description:
-				"IMPORTANT: You MUST now call the select-lesson-plan tool with the lesson data above to display the plan selector. Build a little excitement — something like 'Here are three options I picked out for you — take a look and tell me which feels right!' Then call select-lesson-plan immediately. The widget displays all the plan details, prices, and perks so do NOT list or repeat them yourself.\n\nPLAN NAMES: Always refer to plans by their display names (Private Masterclass, Small Group Workshop, Family Adventure), NEVER by their IDs ('private', 'small_group', 'family').\n\nWait for the user to click a card or name a plan. When they do, set lessonPlan to 'private', 'small_group', or 'family' in stateUpdates. Do NOT set lessonPlan before the user has made their choice.",
+				"IMPORTANT: You MUST now call the select-portfolio tool with the data above to display the portfolio picker. Frame it warmly — something like 'Here are three portfolios that fit your profile — take a look and tell me which one feels right.' Then call select-portfolio immediately. The widget displays all portfolio details (returns, risk, asset mix, highlights) so do NOT list or repeat them yourself.\n\nPORTFOLIO NAMES: Always refer to portfolios by their display names (Conservative, Balanced, Growth) — never by their IDs.\n\nWait for the user to click a card or name a portfolio. When they do, set selectedPortfolio to 'conservative', 'balanced', or 'growth' in stateUpdates, then briefly congratulate them on the choice — one short sentence, no recap of the details.",
 			data: {
-				level: state.level,
-				groupSize: state.groupSize,
-				date: state.date,
-				time: state.time,
-				goals: state.goals,
-				plans,
-			},
-		});
-	})
-
-	// Step 4: confirm booking — generate resort details and show the ski pass
-	.addNode("confirm_booking", ({ state, showWidget }) => {
-		const seed = `${state.level}|${state.groupSize}|${state.date}|${state.time}|${state.lessonPlan}`;
-		const bookingRef = generateBookingRef(seed);
-		const instructor = pick(INSTRUCTORS, seed);
-		const meetingPoint = pick(MEETING_POINTS, `${seed}m`);
-		const weather = pick(WEATHER_FORECASTS, `${seed}w`);
-
-		const plans = buildPlans(
-			state.groupSize ?? 1,
-			state.level ?? "intermediate",
-		);
-		const selectedPlan =
-			plans.find((p) => p.id === state.lessonPlan) ?? plans[0];
-
-		return showWidget("ski-pass-confirmation", {
-			description: `IMPORTANT: You MUST now call the ski-pass-confirmation tool with the booking data above to display the ski pass. Celebrate briefly — something like 'You're all set! Your pass is ready above ☃️' — then wish them a great day on the mountain. Then call ski-pass-confirmation immediately. The widget displays all booking details, QR code, instructor info, and meeting point so do NOT list or repeat any of them yourself.\n\nTONE: Keep it short and celebratory. One or two sentences max. The pass speaks for itself.`,
-			data: {
-				bookingRef,
-				level: state.level,
-				groupSize: state.groupSize,
-				date: state.date,
-				time: state.time,
-				goals: state.goals,
-				lessonPlan: selectedPlan.name,
-				lessonTagline: selectedPlan.tagline,
-				durationMinutes: selectedPlan.durationMinutes,
-				priceEur: selectedPlan.priceEur,
-				instructor: instructor.name,
-				instructorStyle: instructor.style,
-				meetingPoint,
-				weather,
+				goal: state.goal,
+				horizon: state.horizon,
+				riskTolerance: state.riskTolerance,
+				portfolios: PORTFOLIOS,
 			},
 		});
 	})
 
 	.addEdge(START, "welcome")
-	.addEdge("welcome", "gather_details")
-	.addEdge("gather_details", "show_lesson_plans")
-	.addEdge("show_lesson_plans", "confirm_booking")
-	.addEdge("confirm_booking", END)
+	.addEdge("welcome", "clarify")
+	.addEdge("clarify", "show_portfolios")
+	.addEdge("show_portfolios", END)
 	.compile();
