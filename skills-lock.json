@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "chatgpt-app-builder": {
+      "source": "alpic-ai/skybridge",
+      "sourceType": "github",
+      "computedHash": "a5f7e478f9af8939b7571973927c2468b453e8959989ee9883b666e1818ca32b"
+    },
+    "waniwani-sdk": {
+      "source": "WaniWani-AI/sdk",
+      "sourceType": "github",
+      "computedHash": "678cd1b2712a2d3fb6c2a50dec2a22ffec658c209e12b86f52200dff2cf69941"
+    }
+  }
+}

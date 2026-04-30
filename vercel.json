@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build:vercel",
+  "framework": null,
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "{dist/assets/.vite/**,node_modules/skybridge/dist/server/templates/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
+  ]
+}
