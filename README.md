@@ -39,11 +39,15 @@ npm run dev
 
 ### Connect to ChatGPT
 
-1. Expose your local server:
+1. Expose your local server with a tunnel:
    ```bash
+   # ngrok (requires account)
    ngrok http 3000
+
+   # or cloudflared (anonymous quick tunnel, no login)
+   cloudflared tunnel --url http://localhost:3000
    ```
-2. In ChatGPT, go to **Settings → Connectors → Create** and add the public URL suffixed with `/mcp` (e.g. `https://abc123.ngrok-free.app/mcp`).
+2. In ChatGPT, go to **Settings → Connectors → Create** and add the public URL suffixed with `/mcp` (e.g. `https://abc123.ngrok-free.app/mcp` or `https://<random>.trycloudflare.com/mcp`).
 
 ## Deployment
 
