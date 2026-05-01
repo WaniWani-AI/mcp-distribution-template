@@ -2,7 +2,7 @@ import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
 import { z } from "zod";
-import { portfolioPickerFlow } from "./journey/index.js";
+import { portfolioPickerFlow } from "./flow/index.js";
 
 const portfolioSchema = z.object({
 	id: z.enum(["conservative", "balanced", "growth"]),
