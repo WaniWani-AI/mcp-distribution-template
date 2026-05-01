@@ -31,9 +31,13 @@ The server is platform-agnostic. `web/` widgets mount via `mountWidget(...)` fro
 
 ## Deploy
 
-- **Alpic** — [![Deploy](https://assets.alpic.ai/button.svg)](https://app.alpic.ai/new/clone?repositoryUrl=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
+For deployment, you can choose between Alpic or Vercel.
 
-- **Vercel** — [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
+[![Deploy](https://assets.alpic.ai/button.svg)](https://app.alpic.ai/new/clone?repositoryUrl=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
+
+OR
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
 
 ## Docs
 
