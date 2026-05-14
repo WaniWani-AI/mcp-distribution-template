@@ -17,6 +17,17 @@ To test in ChatGPT/Claude, expose the port with [ngrok](https://ngrok.com) or [c
 
 > Inside Claude Code, just run `/waniwani-sdk tunnel` — the skill starts the dev server and opens a public tunnel for you.
 
+## Run with Docker
+
+```bash
+docker build -t mcp-template .
+docker run --rm -p 3000:3000 --env-file .env mcp-template
+```
+
+- MCP endpoint: http://localhost:3000/mcp
+- Override the port with `-e PORT=8080 -p 8080:8080`.
+- `--env-file .env` supplies `WANIWANI_API_KEY` and `WANIWANI_PUBLIC_KEY` (see `.env.example`).
+
 ## Layout
 
 ```
