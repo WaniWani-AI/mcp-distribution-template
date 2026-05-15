@@ -1,5 +1,5 @@
 {
-  "extends": "skybridge/tsconfig",
+  "extends": "./node_modules/skybridge/tsconfig.base.json",
 
   "compilerOptions": {
     "outDir": "dist",
