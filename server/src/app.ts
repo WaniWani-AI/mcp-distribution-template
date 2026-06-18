@@ -25,7 +25,7 @@ export const server = new McpServer(
 		"select-portfolio",
 		{
 			description:
-				"You MUST call this tool to display the investment portfolio picker. It shows three portfolio options for the user to pick from. The widget renders all portfolio details (target return, risk, asset mix, highlights) — do NOT list or repeat them in text.",
+				"Displays the investment portfolio picker — three portfolio options for the user to choose from. Frame it warmly before calling, e.g. 'Here are three portfolios that fit your profile — take a look and tell me which one feels right.' The widget renders all portfolio details (target return, risk, asset mix, highlights) — do NOT list or repeat them in text.",
 		},
 		{
 			inputSchema: {
@@ -40,7 +40,9 @@ export const server = new McpServer(
 				riskTolerance: z
 					.string()
 					.optional()
-					.describe("User's risk tolerance: conservative, balanced, or growth."),
+					.describe(
+						"User's risk tolerance: conservative, balanced, or growth.",
+					),
 				portfolios: z
 					.array(portfolioSchema)
 					.describe("Three portfolio options to display."),
@@ -57,7 +59,11 @@ export const server = new McpServer(
 				content: [
 					{
 						type: "text",
-						text: `Showing ${portfolios.length} portfolio options.`,
+						text: `Showing ${portfolios.length} portfolio options. The widget displays all portfolio details (returns, risk, asset mix, highlights) — do NOT list or repeat them yourself.
+
+PORTFOLIO NAMES: Always refer to portfolios by their display names (Conservative, Balanced, Growth) — never by their IDs.
+
+Wait for the user to click a card or name a portfolio. When they do, set selectedPortfolio to 'conservative', 'balanced', or 'growth' in stateUpdates, then briefly congratulate them on the choice — one short sentence, no recap of the details.`,
 					},
 				],
 				isError: false,

@@ -33,12 +33,14 @@ export const portfolioPickerFlow = createFlow({
 	},
 })
 	// Step 1: open-ended welcome — extract whatever the user volunteers
-	.addNode("welcome", ({ interrupt }) => {
-		return interrupt({
-			goal: {
-				question:
-					"What are you looking to invest for, and what's your timeline like?",
-				context: `This is the first message of an investment-portfolio picker. Greet the user warmly and ask ONE open-ended question — do NOT list fields, do NOT ask multiple questions in a row.
+	.addNode({
+		id: "welcome",
+		run: ({ interrupt }) => {
+			return interrupt({
+				goal: {
+					question:
+						"What are you looking to invest for, and what's your timeline like?",
+					context: `This is the first message of an investment-portfolio picker. Greet the user warmly and ask ONE open-ended question — do NOT list fields, do NOT ask multiple questions in a row.
 
 Something like: "Hey! I'd love to help you find a portfolio that fits. What are you looking to invest for, and what's your timeline like?"
 
@@ -48,60 +50,66 @@ From the user's response, extract into stateUpdates whatever they naturally shar
 - riskTolerance: "conservative" | "balanced" | "growth" — only set if they clearly signal it ("I don't want to lose money" → conservative, "I want max returns" → growth)
 
 Only extract fields the user clearly mentioned — do NOT guess. The next step will gather what's missing.`,
-			},
-		});
+				},
+			});
+		},
 	})
 
 	// Step 2: single conversational follow-up for whatever's missing
-	.addNode("clarify", ({ state, interrupt }) => {
-		return interrupt(
-			{
-				...(!state.horizon
-					? {
-						horizon: {
-							question: "When do you think you'll need the money?",
-							suggestions: [
-								"short (under 3 years)",
-								"medium (3-10 years)",
-								"long (10+ years)",
-							],
-						},
-					}
-					: {}),
-				...(!state.riskTolerance
-					? {
-						riskTolerance: {
-							question: "How do you feel about market ups and downs?",
-							suggestions: ["conservative", "balanced", "growth"],
-						},
-					}
-					: {}),
-			},
-			{
-				context: `React warmly to what the user just shared, then ask only the missing pieces conversationally — NOT a form. Weave the questions into a natural follow-up.
+	.addNode({
+		id: "clarify",
+		run: ({ state, interrupt }) => {
+			return interrupt(
+				{
+					...(!state.horizon
+						? {
+								horizon: {
+									question: "When do you think you'll need the money?",
+									suggestions: [
+										"short (under 3 years)",
+										"medium (3-10 years)",
+										"long (10+ years)",
+									],
+								},
+							}
+						: {}),
+					...(!state.riskTolerance
+						? {
+								riskTolerance: {
+									question: "How do you feel about market ups and downs?",
+									suggestions: ["conservative", "balanced", "growth"],
+								},
+							}
+						: {}),
+				},
+				{
+					context: `React warmly to what the user just shared, then ask only the missing pieces conversationally — NOT a form. Weave the questions into a natural follow-up.
 
 Good follow-ups:
 - "Saving for a house — love that. Are you thinking a couple of years out, or a bit further?"
 - "30 years to retirement gives you a ton of room. How do you feel about market swings — would you rather play it safe or aim for higher returns?"
 
 FORMATTING: flowing prose, never bullet points. Match the user's energy.`,
-			},
-		);
+				},
+			);
+		},
 	})
 
 	// Step 3: show the portfolio picker — terminal node
-	.addNode("show_portfolios", ({ state, showWidget }) => {
-		return showWidget("select-portfolio", {
-			field: "selectedPortfolio",
-			description:
-				"IMPORTANT: You MUST now call the select-portfolio tool with the data above to display the portfolio picker. Frame it warmly — something like 'Here are three portfolios that fit your profile — take a look and tell me which one feels right.' Then call select-portfolio immediately. The widget displays all portfolio details (returns, risk, asset mix, highlights) so do NOT list or repeat them yourself.\n\nPORTFOLIO NAMES: Always refer to portfolios by their display names (Conservative, Balanced, Growth) — never by their IDs.\n\nWait for the user to click a card or name a portfolio. When they do, set selectedPortfolio to 'conservative', 'balanced', or 'growth' in stateUpdates, then briefly congratulate them on the choice — one short sentence, no recap of the details.",
-			data: {
-				goal: state.goal,
-				horizon: state.horizon,
-				riskTolerance: state.riskTolerance,
-				portfolios: PORTFOLIOS,
-			},
-		});
+	.addNode({
+		id: "show_portfolios",
+		run: ({ state, showWidget }) => {
+			return showWidget({
+				tool: "select-portfolio",
+				field: "selectedPortfolio",
+				data: {
+					goal: state.goal,
+					horizon: state.horizon,
+					riskTolerance: state.riskTolerance,
+					portfolios: PORTFOLIOS,
+				},
+			});
+		},
 	})
 
 	.addEdge(START, "welcome")
