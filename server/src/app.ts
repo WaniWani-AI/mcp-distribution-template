@@ -2,6 +2,7 @@ import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
 import { z } from "zod";
+import { faqTool } from "./faq/index.js";
 import { portfolioPickerFlow } from "./flow/index.js";
 
 const portfolioSchema = z.object({
@@ -70,6 +71,7 @@ Wait for the user to click a card or name a portfolio. When they do, set selecte
 			};
 		},
 	)
+	.registerTool(faqTool.name, faqTool.config, faqTool.handler)
 	.registerTool(
 		portfolioPickerFlow.name,
 		portfolioPickerFlow.config,

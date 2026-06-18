@@ -33,12 +33,29 @@ docker run --rm -p 3000:3000 --env-file .env mcp-template
 ```
 server/src/        MCP server — tools, flows, resources
 web/src/widgets/   React widgets rendered in the chat client
+knowledge-base/    Markdown docs searched by the FAQ tool
+scripts/           Maintenance scripts (e.g. kb:ingest)
 api/index.ts       Vercel serverless adapter
 alpic.json         Alpic config
 vercel.json        Vercel config
 ```
 
 The server is platform-agnostic. `web/` widgets mount via `mountWidget(...)` from `skybridge/web`.
+
+## Knowledge base (FAQ tool)
+
+The template ships with a `faq` tool that runs semantic search over the markdown
+files in `knowledge-base/` and answers general product questions.
+
+```bash
+# 1. Add or edit .md files in knowledge-base/ (split into chunks by ## headings)
+# 2. Upload them to the WaniWani knowledge base:
+bun run kb:ingest      # or npm run kb:ingest
+```
+
+Ingestion is **destructive** — it replaces all existing chunks for the
+environment with the current contents of `knowledge-base/`. Requires
+`WANIWANI_API_KEY`.
 
 ## Deploy
 

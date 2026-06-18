@@ -10,7 +10,8 @@
     "lint:fix": "biome check --write",
     "format": "biome format --write",
     "build:alpic": "skybridge build",
-    "build:vercel": "skybridge build && mkdir -p public && cp -r dist/assets public/assets"
+    "build:vercel": "skybridge build && mkdir -p public && cp -r dist/assets public/assets",
+    "kb:ingest": "tsx scripts/kb-ingest.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
