@@ -8,4 +8,5 @@ import { waniwani } from "@waniwani/sdk";
  */
 export const wani = waniwani({
 	apiKey: process.env.WANIWANI_API_KEY,
+	apiUrl: process.env.WANIWANI_API_URL,
 });
