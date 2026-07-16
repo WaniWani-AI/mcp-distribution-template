@@ -49,6 +49,7 @@ export const server = new McpServer(
 					.describe("Three portfolio options to display."),
 			},
 			annotations: {
+				title: "Show portfolio options",
 				readOnlyHint: true,
 				openWorldHint: false,
 				destructiveHint: false,

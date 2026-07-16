@@ -9,6 +9,14 @@ export const portfolioPickerFlow = createFlow({
 	title: "Pick an Investment Portfolio",
 	description:
 		"Help the user pick an investment portfolio that fits their goals, time horizon, and risk tolerance. Use whenever a user mentions wanting to invest, save toward a goal, or compare portfolio options. TONE: warm, knowledgeable, plain-English — never pushy or jargon-heavy. React naturally to what the user shares.",
+	// Claude's Connectors Directory requires a `title` inside `annotations` on
+	// every tool, plus the applicable hint — the top-level `title` doesn't count.
+	annotations: {
+		title: "Pick an investment portfolio",
+		readOnlyHint: true,
+		openWorldHint: false,
+		destructiveHint: false,
+	},
 	state: {
 		goal: z
 			.string()
