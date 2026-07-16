@@ -34,6 +34,7 @@ export const faqTool = {
 		inputSchema,
 		outputSchema,
 		annotations: {
+			title: "Answer a question from the knowledge base",
 			readOnlyHint: true,
 			openWorldHint: false,
 			destructiveHint: false,
