@@ -59,13 +59,21 @@ environment with the current contents of `knowledge-base/`. Requires
 
 ## Deploy
 
-For deployment, you can choose between Alpic or Vercel.
+For a managed deploy, choose Alpic or Vercel. To run it on your own infrastructure, self-host the Docker image.
 
 [![Deploy](https://assets.alpic.ai/button.svg)](https://app.alpic.ai/new/clone?repositoryUrl=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
 
 OR
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FWaniWani-AI%2Fmcp-distribution-template)
+
+### Self-host with Docker
+
+The template ships a production `Dockerfile`, so you can deploy it to anything that runs containers (a VPS, Fly.io, Railway, Render, Cloud Run, Kubernetes, …). Build the image and run the container — see [Run with Docker](#run-with-docker) for the commands. For a hosted deployment:
+
+- Publish the image to your registry (or build it on the host), then run the container behind your platform's router.
+- The MCP endpoint is served at `http://<your-host>/mcp` — port `3000` by default. Set `PORT` to match your platform and map it, e.g. `-e PORT=8080 -p 8080:8080`.
+- Supply `WANIWANI_API_KEY` and `WANIWANI_PUBLIC_KEY` as environment variables / secrets on the host rather than baking a `.env` file into the image.
 
 ## Docs
 
