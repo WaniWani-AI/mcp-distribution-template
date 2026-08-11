@@ -1,238 +1,26 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
 
-* {
-	box-sizing: border-box;
+/* The host chat client hands the colour scheme to the view (`useLayout().theme`)
+   rather than to the browser, so the `dark:` variant hangs off a `dark` class
+   you put on your wrapper element instead of `prefers-color-scheme`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens. Every entry here becomes a utility: `--color-ink` gives you
+   `text-ink` / `bg-ink`, `--font-sans` gives you `font-sans`. Rebrand the
+   template by editing these values. */
+@theme {
+	--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+	--color-ink: #0a1334;
+	--color-ink-muted: #5a628a;
+	--color-surface: #ffffff;
+	--color-surface-muted: #f5f6fa;
 }
 
-body {
-	margin: 0;
-	font-family: "Inter", system-ui, -apple-system, sans-serif;
-	color: #0a1334;
-	-webkit-font-smoothing: antialiased;
-}
-
-/* ==========================================================================
-   PORTFOLIO PICKER
-   ========================================================================== */
-
-.portfolio-shell {
-	padding: 1.25rem 1rem 1rem;
-}
-
-.portfolio-loading {
-	padding: 3rem 1rem;
-	text-align: center;
-	color: #6b7280;
-	font-style: italic;
-}
-
-.portfolio-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 1rem;
-	flex-wrap: wrap;
-	gap: 0.5rem;
-}
-
-.portfolio-eyebrow {
-	font-size: 0.7rem;
-	font-weight: 600;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: #4338ca;
-}
-
-.portfolio-summary {
-	display: flex;
-	gap: 0.4rem;
-	flex-wrap: wrap;
-}
-
-.portfolio-chip {
-	display: inline-flex;
-	align-items: center;
-	padding: 0.25rem 0.65rem;
-	border-radius: 999px;
-	background: rgba(99, 102, 241, 0.1);
-	color: #4338ca;
-	font-size: 0.7rem;
-	font-weight: 600;
-	text-transform: capitalize;
-}
-
-.portfolio-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	gap: 0.85rem;
-}
-
-.portfolio-card {
-	appearance: none;
-	border: none;
-	text-align: left;
-	font: inherit;
-	color: inherit;
-
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: 0.65rem;
-	padding: 1.1rem 1.1rem 1rem;
-	border-radius: 1rem;
-	background: #fff;
-	box-shadow:
-		0 1px 0 rgba(10, 19, 52, 0.04),
-		0 10px 30px -12px rgba(10, 19, 52, 0.18),
-		inset 0 0 0 1px rgba(10, 19, 52, 0.06);
-	cursor: pointer;
-	overflow: hidden;
-	transition:
-		transform 0.22s ease,
-		box-shadow 0.22s ease;
-}
-
-.portfolio-card::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		135deg,
-		var(--accent, #6366f1) 0%,
-		transparent 45%
-	);
-	opacity: 0.08;
-	pointer-events: none;
-	transition: opacity 0.22s ease;
-}
-
-.portfolio-card:hover {
-	transform: translateY(-3px);
-	box-shadow:
-		0 1px 0 rgba(10, 19, 52, 0.04),
-		0 22px 45px -18px rgba(10, 19, 52, 0.3),
-		inset 0 0 0 1px var(--accent, #6366f1);
-}
-
-.portfolio-card:hover::before {
-	opacity: 0.14;
-}
-
-.portfolio-card--conservative {
-	--accent: #0ea5e9;
-}
-
-.portfolio-card--balanced {
-	--accent: #6366f1;
-}
-
-.portfolio-card--growth {
-	--accent: #f97316;
-}
-
-.portfolio-card__head {
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.5rem;
-}
-
-.portfolio-card__name {
-	font-size: 1rem;
-	font-weight: 700;
-	color: #0a1334;
-	line-height: 1.25;
-}
-
-.portfolio-card__risk {
-	font-size: 0.65rem;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--accent, #6366f1);
-	padding: 0.2rem 0.55rem;
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--accent, #6366f1) 12%, transparent);
-}
-
-.portfolio-card__tagline {
-	position: relative;
-	font-size: 0.78rem;
-	color: #6b7280;
-	line-height: 1.4;
-}
-
-.portfolio-card__return {
-	position: relative;
-	display: flex;
-	align-items: baseline;
-	gap: 0.4rem;
-	padding-top: 0.3rem;
-}
-
-.portfolio-card__return-amount {
-	font-size: 1.35rem;
-	font-weight: 700;
-	color: var(--accent, #6366f1);
-	line-height: 1;
-}
-
-.portfolio-card__return-meta {
-	font-size: 0.7rem;
-	color: #6b7280;
-}
-
-.portfolio-card__mix {
-	position: relative;
-	font-size: 0.72rem;
-	color: #4b5563;
-	font-weight: 500;
-	padding: 0.4rem 0;
-	border-top: 1px dashed rgba(10, 19, 52, 0.12);
-	border-bottom: 1px dashed rgba(10, 19, 52, 0.12);
-}
-
-.portfolio-card__highlights {
-	position: relative;
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.3rem;
-	flex: 1;
-}
-
-.portfolio-card__highlights li {
-	position: relative;
-	padding-left: 1rem;
-	font-size: 0.72rem;
-	color: #4b5563;
-	line-height: 1.35;
-}
-
-.portfolio-card__highlights li::before {
-	content: "✓";
-	position: absolute;
-	left: 0;
-	color: var(--accent, #6366f1);
-	font-weight: 700;
-}
-
-.portfolio-card__cta {
-	position: relative;
-	font-size: 0.72rem;
-	font-weight: 600;
-	color: var(--accent, #6366f1);
-	letter-spacing: 0.02em;
-	margin-top: 0.2rem;
-}
-
-.portfolio-footnote {
-	margin-top: 0.85rem;
-	font-size: 0.72rem;
-	text-align: center;
-	color: #6b7280;
-	font-style: italic;
+@layer base {
+	body {
+		color: var(--color-ink);
+		-webkit-font-smoothing: antialiased;
+	}
 }

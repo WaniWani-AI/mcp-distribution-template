@@ -1,7 +1,13 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
 	"files": {
-		"includes": ["server/**", "web/**", "!**/dist", "!**/node_modules"]
+		"includes": [
+			"src/**",
+			"vite.config.ts",
+			"!**/dist",
+			"!**/node_modules",
+			"!.skybridge"
+		]
 	},
 	"linter": {
 		"enabled": true,
@@ -18,5 +24,10 @@
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
 	}
 }

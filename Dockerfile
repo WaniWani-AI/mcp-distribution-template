@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 COPY . .
-RUN bun run build:alpic
+RUN bun run build
 
 FROM node:24-slim AS runtime
 WORKDIR /app
@@ -27,4 +27,6 @@ COPY --chown=node:node package.json ./
 EXPOSE 3000
 
 # Map user-facing PORT to skybridge's internal __PORT, then exec so node is PID 1.
-CMD ["sh", "-c", "exec env __PORT=\"${PORT}\" node dist/server/src/index.js"]
+# `dist/__entry.js` is skybridge's generated entry: it primes the Vite manifest
+# before importing the compiled server.
+CMD ["sh", "-c", "exec env __PORT=\"${PORT}\" node dist/__entry.js"]

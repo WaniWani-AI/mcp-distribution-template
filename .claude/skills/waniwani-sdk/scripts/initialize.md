@@ -131,7 +131,7 @@ rm web/src/widgets/select-lesson-plan.tsx
 rm web/src/widgets/ski-pass-confirmation.tsx
 ```
 
-Clear `web/src/index.css` to a minimal reset (keep the file, remove all lesson/ski-pass styles).
+Clear `src/index.css` back to the Tailwind entry (keep `@import "tailwindcss"`, the `dark` custom variant and the `@theme` block; remove all lesson/ski-pass rules).
 
 ## Step 5: Scaffold the Flow
 
@@ -236,18 +236,23 @@ For each widget, create a component in `web/src/widgets/`.
 ### Widget component -- `web/src/widgets/{widget-name}.tsx`
 
 ```tsx
+import "@/index.css";
 import { useToolInfo } from "@/helpers";
 import { useOpenExternal } from "@waniwani/sdk/mcp/react";
+import { useLayout } from "skybridge/web";
 
 export default function {WidgetName}() {
   const data = useToolInfo<"{widget-id}">();
   const openExternal = useOpenExternal();
+  const { theme } = useLayout();
 
   if (!data) return null;
 
   return (
-    <div className="{widget-name}">
-      {/* Widget UI */}
+    <div className={theme === "dark" ? "dark" : ""}>
+      <div className="rounded-2xl bg-surface p-4 font-sans text-ink dark:bg-ink dark:text-surface">
+        {/* Widget UI -- Tailwind utilities */}
+      </div>
     </div>
   );
 }
@@ -256,28 +261,29 @@ export default function {WidgetName}() {
 **Key points:**
 - Use `useToolInfo<"{widget-id}">()` from `@/helpers` for type-safe data access (not `useToolOutput` -- this is skybridge, not raw SDK)
 - Use `useOpenExternal()` for external links
-- All styling goes in `web/src/index.css`
+- Import `@/index.css` in every widget -- each one is its own bundle entry
+- Style with Tailwind utility classes; the `dark:` variant needs the `dark` class from `useLayout().theme` on a wrapper
 
-### Widget styles -- `web/src/index.css`
+### Design tokens -- `src/index.css`
 
-Style widgets using plain CSS with custom properties for brand colors:
+Styling is Tailwind CSS v4 with no config file: the theme lives in the CSS entry. Set the brand palette as `@theme` tokens, which generates the matching utilities (`--color-brand-primary` gives you `bg-brand-primary`, `text-brand-primary`, …):
 
 ```css
-:root {
-  --brand-primary: {extracted-primary-color};
-  --brand-accent: {extracted-accent-color};
-  --brand-text: {extracted-text-color};
-  --brand-bg: {extracted-bg-color};
-}
+@import "tailwindcss";
 
-.{widget-name} {
-  /* Widget-specific styles */
-  font-family: system-ui, sans-serif;
-  padding: 1rem;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: {extracted-font}, system-ui, sans-serif;
+
+  --color-brand-primary: {extracted-primary-color};
+  --color-brand-accent: {extracted-accent-color};
+  --color-ink: {extracted-text-color};
+  --color-surface: {extracted-bg-color};
 }
 ```
 
-Apply the brand colors and tone extracted from the user's website by the background agent.
+Apply the brand colors and tone extracted from the user's website by the background agent. Write plain CSS here only for what utilities can't express (keyframes, third-party overrides) -- everything else belongs in `className`.
 
 ## Step 7: Register Everything in `server/src/app.ts`
 
@@ -377,7 +383,7 @@ After completing all steps, print:
 - **This template uses skybridge**, not Next.js. Widgets live in `web/src/widgets/`, server code in `server/src/`.
 - **Use `useToolInfo<"name">()`** from `@/helpers` for widget data, not `useToolOutput` from the SDK directly.
 - **No `WidgetProvider` needed** -- skybridge handles widget lifecycle automatically.
-- **Styles go in `web/src/index.css`** -- plain CSS with custom properties, no Tailwind.
+- **Styling is Tailwind CSS v4** -- utility classes in the widgets, brand tokens in the `@theme` block of `src/index.css`. No `tailwind.config.js`; the `@tailwindcss/vite` plugin is already wired up in `vite.config.ts`.
 - **`server/src/index.ts`** must export `AppType` for typed widget helpers to work.
 - **Brand extraction runs in the background** -- use the results when scaffolding widgets and CSS.
 - **Mock data should be realistic** -- use actual product names, prices, and features from the user's website.

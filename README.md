@@ -31,33 +31,122 @@ docker run --rm -p 3000:3000 --env-file .env mcp-template
 ## Layout
 
 ```
-server/src/        MCP server — tools, flows, resources
-web/src/widgets/   React widgets rendered in the chat client
-knowledge-base/    Markdown docs searched by the FAQ tool
-scripts/           Maintenance scripts (e.g. kb:ingest)
-api/index.ts       Vercel serverless adapter
+src/server.ts      MCP server — entry point, tool registration
+src/faq/           `faq` tool — knowledge-base search
+src/lib/waniwani.ts  Shared server-side WaniWani client
+src/views/         React views rendered in the chat client
+src/helpers.ts     Typed skybridge hooks inferred from the server
+src/index.css      Tailwind entry — theme tokens + base styles
+vite.config.ts     Vite + skybridge + Tailwind plugins
 alpic.json         Alpic config
-vercel.json        Vercel config
 ```
 
-The server is platform-agnostic. `web/` widgets mount via `mountWidget(...)` from `skybridge/web`.
+The template ships one tool out of the box — [`faq`](#knowledge-base-faq-tool),
+which answers questions from your WaniWani knowledge base. Add your own in
+`src/server.ts`. The server is platform-agnostic.
 
-## Knowledge base (FAQ tool)
+### Add a tool
 
-The template ships with a `faq` tool that runs semantic search over the markdown
-files in `knowledge-base/` and answers general product questions.
-
-```bash
-# 1. Add or edit .md files in knowledge-base/ (split into chunks by ## headings)
-# 2. Upload them to the WaniWani knowledge base:
-bun run kb:ingest      # or npm run kb:ingest
+```ts
+const server = new McpServer({ name: "…", version: "0.0.1" }, { capabilities: {} })
+  .registerTool(
+    {
+      name: "search-trips",
+      description: "Search available trips.",
+      inputSchema: { destination: z.string() },
+    },
+    async ({ destination }) => ({
+      structuredContent: { results: [] },
+      content: [{ type: "text", text: `Searched ${destination}` }],
+    }),
+  );
 ```
 
-Ingestion is **destructive** — it replaces all existing chunks for the
-environment with the current contents of `knowledge-base/`. Requires
-`WANIWANI_API_KEY`.
+Keep the `withWaniwani(server)` call **below** your registrations.
+
+### Add a view
+
+Drop a `.tsx` file in `src/views/` that **default-exports** a React component —
+skybridge mounts it for you, so there is no `mountView(...)` call to write. Then
+point a tool at it with `view: { component: "<filename>" }`:
+
+```ts
+  view: { component: "trip-results" }, // → src/views/trip-results.tsx
+```
+
+Read the tool's data inside the view with the typed hook from `src/helpers.ts`
+(the tool name autocompletes), and style it with Tailwind classes. Each view is
+its own bundle entry, so **import `@/index.css` in every view**:
+
+```tsx
+import "@/index.css";
+import { useToolInfo } from "@/helpers";
+
+export default function TripResults() {
+  const { isSuccess, output } = useToolInfo<"search-trips">();
+  if (!isSuccess) return <p className="p-4 text-sm text-ink-muted">Loading…</p>;
+
+  return (
+    <ul className="flex flex-col gap-2 p-4">
+      {output.results.map((trip) => (
+        <li key={trip.id} className="rounded-xl bg-surface-muted p-3 text-sm">
+          {trip.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Styling
+
+Views are styled with [Tailwind CSS v4](https://tailwindcss.com), wired through
+the `@tailwindcss/vite` plugin — there is no `tailwind.config.js`, all
+configuration lives in `src/index.css`:
+
+- `@theme` defines the design tokens. Each one generates utilities, so
+  `--color-ink` gives you `text-ink` / `bg-ink` and `--font-sans` gives you
+  `font-sans`. **Rebrand the template by editing these values** — the shipped
+  set (`ink`, `ink-muted`, `surface`, `surface-muted`, Inter) is a placeholder.
+- `@custom-variant dark` points the `dark:` variant at a `.dark` class instead
+  of the OS `prefers-color-scheme`, because the chat client hands the colour
+  scheme to the view rather than to the browser. Read it with skybridge's
+  `useLayout()` and put the class on your wrapper element:
+
+```tsx
+import { useLayout } from "skybridge/web";
+
+const { theme } = useLayout(); // "light" | "dark"
+return <div className={theme === "dark" ? "dark" : ""}>{/* … */}</div>;
+```
+
+Utility classes are the default; reach for plain CSS in `src/index.css` only for
+things utilities can't express (keyframes, third-party overrides).
+
+## Knowledge base (`faq` tool)
+
+The template ships with a `faq` tool that runs semantic search
+(`wani.kb.search`) over your WaniWani knowledge base and answers general
+product questions from the passages it gets back.
+
+Manage the knowledge base content from the WaniWani dashboard — the tool reads
+it at runtime. Requires `WANIWANI_API_KEY`. Tune retrieval via the search
+options in [`src/faq/index.ts`](src/faq/index.ts) (`topK`, `minScore`,
+`metadata`), and delete `src/faq/` if you don't need it.
+
+## Analytics
+
+`withWaniwani(server)` wraps every registered tool to report calls to WaniWani.
+Requires `WANIWANI_API_KEY`. Call it **after** registering your tools — it walks
+the already-registered tools and wraps each handler in place.
 
 ## Deploy
+
+`bun run build` (i.e. `skybridge build`) compiles the server to `dist/`, builds
+the views, and additionally emits a native Vercel [Build Output API][bo] tree
+under `.vercel/output/` — so no `vercel.json` or serverless adapter is needed.
+
+[bo]: https://vercel.com/docs/build-output-api
 
 For a managed deploy, choose Alpic or Vercel. To run it on your own infrastructure, self-host the Docker image.
 
