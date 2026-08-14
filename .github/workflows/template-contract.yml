@@ -1,0 +1,82 @@
+# The generator consumes this repo as-is, so a change to its layout can break
+# every app built from it. This workflow builds a real app against the pull
+# request's version of the template and fails if it does not come out working.
+#
+# Effect: the template stays the raw, cloneable showcase it is, and the
+# contract it has with the generator is checked where the change happens.
+
+name: template contract
+
+# `beta`, not `main`. The generator is written against this branch's layout —
+# `vite.config.ts`, `src/server.ts`, `src/views/` — and `main` is still the
+# older `server/` + `web/` + `api/` split, which it cannot absorb. When beta
+# merges down, both filters move to `main`.
+on:
+  pull_request:
+    branches: [beta]
+  push:
+    branches: [beta]
+
+jobs:
+  generates-a-working-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the template
+        uses: actions/checkout@v4
+        with:
+          path: template
+
+      - name: Check out the runtime
+        uses: actions/checkout@v4
+        with:
+          repository: WaniWani-AI/kit
+          path: runtime
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install
+        working-directory: runtime
+        run: bun install
+
+      - name: Build the example app against this template
+        working-directory: runtime/examples/oney
+        run: bunx waniwani build --template ../../../template
+
+      # A template that keeps `src/index.css` but drops the Tailwind plugin from
+      # `vite.config.ts` builds green and serves every widget unstyled — nothing
+      # errors, the utility classes just resolve to nothing. The generator cannot
+      # see that from the filesystem, so the assertion is on the emitted CSS:
+      # `text-ink` is a `@theme` token, and the example's `ui.tsx` is the only
+      # place it appears, so finding it proves both the entry and the scan.
+      - name: Check the app's Tailwind utilities reached the bundle
+        working-directory: runtime/examples/oney
+        run: |
+          css=$(ls .waniwani/dist/assets/assets/style-*.css)
+          for utility in text-ink inset-ring .dark; do
+            grep -qF -- "$utility" "$css" || {
+              echo "::error::$utility is missing from $css — the template's Tailwind setup is not reaching the app's source"
+              exit 1
+            }
+          done
+
+      - name: Serve it and call every tool
+        working-directory: runtime
+        run: |
+          PORT=4000 bunx waniwani start examples/oney &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4000/mcp -X POST \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json, text/event-stream' \
+              -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+              && break
+            sleep 1
+          done
+          node scripts/probe.mjs http://localhost:4000/mcp
+
+      - name: Eject and build with no Waniwani tooling
+        working-directory: runtime/examples/oney
+        run: |
+          bunx waniwani eject --out "$RUNNER_TEMP/ejected" --template ../../../template
+          cd "$RUNNER_TEMP/ejected"
+          npm install
+          npm run build
