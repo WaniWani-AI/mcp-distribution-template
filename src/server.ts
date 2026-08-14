@@ -2,19 +2,27 @@ import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
 import { faqTool } from "./search/index.js";
+import { app, registerApp } from "./waniwani.js";
 
 const server = new McpServer(
 	{
-		name: "mcp-distribution-template",
-		version: "0.0.1",
+		name: app.name,
+		title: app.title,
+		version: app.version,
 	},
-	{ capabilities: {} },
+	{ capabilities: {}, instructions: app.instructions },
 ).registerTool(faqTool.config, faqTool.handler);
 
 // Add more tools by chaining further `.registerTool({ name, ... }, handler)`
 // calls above. To render a React view, add `view: { component: "<file>" }`
 // pointing at a file in `src/views/`.
 // Docs: https://docs.skybridge.tech/api-reference/register-tool
+
+// Whatever the app folder in front of this template contributes — its tools,
+// widgets, flows, and docs. Standalone, `waniwani.ts` registers nothing; under
+// `waniwani build` it is regenerated from the app. Must run before
+// `withWaniwani`, which wraps the already-registered handlers.
+await registerApp(server);
 
 // Must run *after* the tools are registered: `withWaniwani` walks the already
 // registered tools and wraps each handler in place for analytics. (Registering
