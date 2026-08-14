@@ -1,7 +1,7 @@
 import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
-import { faqTool } from "./faq/index.js";
+import { faqTool } from "./search/index.js";
 
 const server = new McpServer(
 	{
