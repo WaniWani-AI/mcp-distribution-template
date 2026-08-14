@@ -38,6 +38,14 @@ jobs:
         working-directory: runtime
         run: bun install
 
+      # `dist/` is gitignored, so a fresh checkout of the runtime has none, and
+      # nothing in `bun install` builds a workspace package. Without this the
+      # app's every import of `@waniwani/kit` resolves to a file that is not
+      # there, and the build fails before it reaches the template at all.
+      - name: Build the kit
+        working-directory: runtime/packages/kit
+        run: bun run build
+
       - name: Build the example app against this template
         working-directory: runtime/examples/oney
         run: bunx waniwani build --template ../../../template
