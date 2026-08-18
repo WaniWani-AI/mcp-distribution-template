@@ -10,13 +10,17 @@
  * and documents the shape the generated file has to match.
  */
 
+import type { WithWaniwaniOptions } from "@waniwani/sdk/mcp";
 import type { McpServer } from "skybridge/server";
+import type { FaqOptions } from "./search/index.js";
 
 export const app = {
 	name: "mcp-distribution-template",
 	title: "MCP Distribution Template",
 	version: "0.0.1",
 	instructions: undefined as string | undefined,
+	faq: undefined as FaqOptions | undefined,
+	tracking: undefined as WithWaniwaniOptions | undefined,
 };
 
 export async function registerApp(_server: McpServer): Promise<void> {
