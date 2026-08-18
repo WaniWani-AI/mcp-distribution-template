@@ -32,7 +32,7 @@ docker run --rm -p 3000:3000 --env-file .env mcp-template
 
 ```
 src/server.ts      MCP server — entry point, tool registration
-src/faq/           `faq` tool — knowledge-base search
+src/search/        `search` tool — knowledge-base search
 src/lib/waniwani.ts  Shared server-side WaniWani client
 src/views/         React views rendered in the chat client
 src/helpers.ts     Typed skybridge hooks inferred from the server
@@ -41,7 +41,7 @@ vite.config.ts     Vite + skybridge + Tailwind plugins
 alpic.json         Alpic config
 ```
 
-The template ships one tool out of the box — [`faq`](#knowledge-base-faq-tool),
+The template ships one tool out of the box — [`search`](#knowledge-base-search-tool),
 which answers questions from your WaniWani knowledge base. Add your own in
 `src/server.ts`. The server is platform-agnostic.
 
@@ -123,16 +123,16 @@ return <div className={theme === "dark" ? "dark" : ""}>{/* … */}</div>;
 Utility classes are the default; reach for plain CSS in `src/index.css` only for
 things utilities can't express (keyframes, third-party overrides).
 
-## Knowledge base (`faq` tool)
+## Knowledge base (`search` tool)
 
-The template ships with a `faq` tool that runs semantic search
+The template ships with a `search` tool that runs semantic search
 (`wani.kb.search`) over your WaniWani knowledge base and answers general
 product questions from the passages it gets back.
 
 Manage the knowledge base content from the WaniWani dashboard — the tool reads
 it at runtime. Requires `WANIWANI_API_KEY`. Tune retrieval via the search
-options in [`src/faq/index.ts`](src/faq/index.ts) (`topK`, `minScore`,
-`metadata`), and delete `src/faq/` if you don't need it.
+options in [`src/search/index.ts`](src/search/index.ts) (`topK`, `minScore`,
+`metadata`), and delete `src/search/` if you don't need it.
 
 ## Analytics
 

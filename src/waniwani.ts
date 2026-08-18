@@ -12,14 +12,14 @@
 
 import type { WithWaniwaniOptions } from "@waniwani/sdk/mcp";
 import type { McpServer } from "skybridge/server";
-import type { FaqOptions } from "./search/index.js";
+import type { SearchOptions } from "./search/index.js";
 
 export const app = {
 	name: "mcp-distribution-template",
 	title: "MCP Distribution Template",
 	version: "0.0.1",
 	instructions: undefined as string | undefined,
-	faq: undefined as FaqOptions | undefined,
+	search: undefined as SearchOptions | undefined,
 	tracking: undefined as WithWaniwaniOptions | undefined,
 };
 

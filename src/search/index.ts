@@ -2,26 +2,33 @@ import type { KbSearchOptions } from "@waniwani/sdk";
 import { z } from "zod";
 import { wani } from "../lib/waniwani.js";
 
-// ---------- FAQ tool ----------
+// ---------- search tool ----------
 //
 // Semantic search over the knowledge base configured for this environment in
 // WaniWani. Use this for general questions about the product or service rather
 // than personalized flows.
 //
-// An app tunes this with `defineApp({ faq: { ... } })`, which arrives here as
-// `app.faq` through the generated `waniwani.ts` — see `server.ts`, which also
-// decides whether the tool is registered at all. `faqTool()` with no argument is
-// the template's own behaviour and has to keep working: a bare clone, with no app
-// folder in front of it, calls exactly that.
+// Named `search`, titled, described and annotated the way the Apps SDK asks for
+// — a verb for a name, a human-readable title, a description that says when NOT
+// to call it as well as when to, hint annotations that match what the handler
+// actually does, and the two `openai/toolInvocation` strings so the host has
+// something to show while the search runs instead of inventing its own label.
+// https://developers.openai.com/apps-sdk/app-guidelines
+//
+// An app tunes this with `defineApp({ search: { ... } })`, which arrives here as
+// `app.search` through the generated `waniwani.ts` — see `server.ts`, which also
+// decides whether the tool is registered at all. `searchTool()` with no argument
+// is the template's own behaviour and has to keep working: a bare clone, with no
+// app folder in front of it, calls exactly that.
 
 /**
  * What an app may set.
  *
- * Structurally the same as `FaqOptions` in `@waniwani/kit`, and declared a second
- * time here because the template does not depend on the kit — the two meet at the
- * generated `waniwani.ts` and nowhere else. Keep them in step.
+ * Structurally the same as `SearchOptions` in `@waniwani/kit`, and declared a
+ * second time here because the template does not depend on the kit — the two
+ * meet at the generated `waniwani.ts` and nowhere else. Keep them in step.
  */
-export type FaqOptions = {
+export type SearchOptions = {
 	/** Whether to register the tool. Read in `server.ts`, not here. */
 	enabled?: boolean;
 	/** Passages to ask for, 1-20. Unset leaves the SDK's default of 5. */
@@ -47,10 +54,21 @@ export type FaqOptions = {
 	 * material rather than instructions.
 	 */
 	preamble?: string;
+	/**
+	 * Status text the host shows while the call is in flight, and once it has
+	 * returned. Configurable because the defaults are English and this string is
+	 * one of the few the user actually reads.
+	 */
+	invoking?: string;
+	invoked?: string;
 };
 
 const inputSchema = {
-	question: z.string().describe("The user's question"),
+	query: z
+		.string()
+		.describe(
+			"What to look up. The search is semantic, so the user's question in their own words works better than keywords.",
+		),
 };
 
 const outputSchema = {
@@ -67,20 +85,24 @@ const outputSchema = {
 					),
 			}),
 		)
-		.describe("Relevant knowledge base passages for the question."),
+		.describe("Knowledge base passages matching the query, best first."),
 	answerText: z
 		.string()
 		.describe("Formatted text answer assembled from the matching passages."),
 };
 
-const NOTHING_FOUND = "I don't have a specific answer for that question.";
+// Model-facing, so it says what to do next rather than only what happened: an
+// empty result is the one case where the tool has nothing to ground an answer
+// in, and that is exactly when a model is most likely to fill the gap itself.
+const NOTHING_FOUND =
+	"Nothing in the knowledge base matched. Tell the user this isn't covered rather than answering from general knowledge.";
 
 /** Only the keys the app actually set, so the SDK's own defaults still apply. */
-function searchOptions({
+function kbOptions({
 	topK,
 	minScore,
 	metadata,
-}: FaqOptions): KbSearchOptions {
+}: SearchOptions): KbSearchOptions {
 	return {
 		...(topK !== undefined && { topK }),
 		...(minScore !== undefined && { minScore }),
@@ -98,8 +120,8 @@ function searchOptions({
  * is an unhandled one, and Node ends the process over that under
  * `--unhandled-rejections=strict`. A genuine search failure still throws.
  */
-async function searchWithin(question: string, options: FaqOptions) {
-	const search = wani.kb.search(question, searchOptions(options));
+async function searchWithin(query: string, options: SearchOptions) {
+	const search = wani.kb.search(query, kbOptions(options));
 	if (!options.timeoutMs) {
 		return search;
 	}
@@ -127,24 +149,34 @@ async function searchWithin(question: string, options: FaqOptions) {
 	}
 }
 
-export function faqTool(options: FaqOptions = {}) {
+export function searchTool(options: SearchOptions = {}) {
 	return {
 		config: {
-			name: "faq",
-			title: "FAQ",
+			name: "search",
+			title: "Search knowledge base",
 			description:
-				"Answer frequently asked questions. Use this when users ask general questions about the product or service — coverage, pricing, eligibility, policy details, and the like. Search the knowledge base before answering, and base your answer only on what comes back. Do NOT invent facts that aren't in the results.",
+				"Search the knowledge base and return the passages that match a query. Use this for general questions about the product or service — what it covers, pricing, eligibility, policy details, and the like. Answer only from the passages it returns, and if it returns none, say the knowledge base doesn't cover the question instead of answering from general knowledge. Do not use it for anything specific to this user's own account or records.",
 			inputSchema,
 			outputSchema,
+			// The hints have to match the handler, or a submission gets rejected over
+			// the mismatch: this one reads a fixed corpus and writes nothing, and the
+			// same query twice returns the same passages.
 			annotations: {
-				title: "Answer a question from the knowledge base",
+				title: "Search knowledge base",
 				readOnlyHint: true,
-				openWorldHint: false,
 				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			},
+			_meta: {
+				"openai/toolInvocation/invoking":
+					options.invoking ?? "Searching the knowledge base",
+				"openai/toolInvocation/invoked":
+					options.invoked ?? "Searched the knowledge base",
 			},
 		},
-		handler: async ({ question }: { question: string }) => {
-			const results = await searchWithin(question, options);
+		handler: async ({ query }: { query: string }) => {
+			const results = await searchWithin(query, options);
 
 			if (results.length === 0) {
 				return {
