@@ -1,26 +1,28 @@
 /**
- * The seam the Waniwani generator writes into.
+ * GENERATED ON BUILD. `waniwani build` OVERWRITES THIS FILE WHOLE — DO NOT PUT
+ * ANYTHING HERE THAT AN APP NEEDS, BECAUSE NOTHING HERE SURVIVES A BUILD.
  *
- * `waniwani build` overwrites this file with one generated from the app folder:
- * the app's identity, and a `registerApp()` that registers its tools, widgets,
- * flows, and docs onto the server built in `server.ts`.
+ * This is the seam the Waniwani generator writes into. What it writes is the
+ * app's identity, and a `registerApp()` that registers the app folder's tools,
+ * widgets, flows and docs onto the server built in `server.ts`.
  *
- * What is here is the standalone version — the template cloned on its own, with
- * no app folder in front of it. It keeps `bun run dev` working on a fresh clone
- * and documents the shape the generated file has to match.
+ * What is *checked in* is the standalone version — the template cloned on its
+ * own, with no app folder in front of it — and editing it is how a bare clone
+ * changes its own name, title and version. Anything more belongs in the app's
+ * `waniwani.config.ts`, which is the input the generator actually reads.
+ *
+ * The shape the generated file has to match is `AppDefinition`, not this
+ * literal: an app sets `instructions`, `search` and `tracking` through that
+ * config, and a bare template sets none of them.
  */
 
-import type { WithWaniwaniOptions } from "@waniwani/sdk/mcp";
 import type { McpServer } from "skybridge/server";
-import type { SearchOptions } from "./search/index.js";
+import type { AppDefinition } from "./lib/app.js";
 
-export const app = {
+export const app: AppDefinition = {
 	name: "mcp-distribution-template",
 	title: "MCP Distribution Template",
 	version: "0.0.1",
-	instructions: undefined as string | undefined,
-	search: undefined as SearchOptions | undefined,
-	tracking: undefined as WithWaniwaniOptions | undefined,
 };
 
 export async function registerApp(_server: McpServer): Promise<void> {

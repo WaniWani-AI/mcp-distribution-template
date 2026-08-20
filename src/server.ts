@@ -1,8 +1,17 @@
 import { withWaniwani } from "@waniwani/sdk/mcp";
 import "dotenv/config";
 import { McpServer } from "skybridge/server";
+import type { AppDefinition } from "./lib/app.js";
 import { searchTool } from "./search/index.js";
-import { app, registerApp } from "./waniwani.js";
+import { app as generated, registerApp } from "./waniwani.js";
+
+// `waniwani.ts` is generated, so its `app` is whatever the generator happened to
+// emit — inferred from a literal, with a key simply absent for every option the
+// app's config left unset. Naming the contract here is what turns that into a
+// checked seam: a generated file that stops carrying `name`, or starts carrying a
+// `search` of the wrong shape, fails the build instead of reading `undefined` at
+// runtime, and everything below can keep using the optional fields.
+const app: AppDefinition = generated;
 
 const server = new McpServer(
 	{

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@waniwani/sdk": "^0.19.5",
+    "@waniwani/sdk": "^0.19.8",
     "dotenv": "^17.4.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

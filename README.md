@@ -32,6 +32,8 @@ docker run --rm -p 3000:3000 --env-file .env mcp-template
 
 ```
 src/server.ts      MCP server — entry point, tool registration
+src/waniwani.ts    App identity + registrations — OVERWRITTEN by `waniwani build`
+src/lib/app.ts     `AppDefinition` — the contract the generated file must match
 src/search/        `search` tool — knowledge-base search
 src/lib/waniwani.ts  Shared server-side WaniWani client
 src/views/         React views rendered in the chat client
@@ -39,6 +41,7 @@ src/helpers.ts     Typed skybridge hooks inferred from the server
 src/index.css      Tailwind entry — theme tokens + base styles
 vite.config.ts     Vite + skybridge + Tailwind plugins
 alpic.json         Alpic config
+vercel.json        Vercel config
 ```
 
 The template ships one tool out of the box — [`search`](#knowledge-base-search-tool),
@@ -144,9 +147,17 @@ the already-registered tools and wraps each handler in place.
 
 `bun run build` (i.e. `skybridge build`) compiles the server to `dist/`, builds
 the views, and additionally emits a native Vercel [Build Output API][bo] tree
-under `.vercel/output/` — so no `vercel.json` or serverless adapter is needed.
+under `.vercel/output/` — so no serverless adapter is needed. Vercel adopts that
+tree as-is, and the routing it needs (`/mcp`, the static assets, the catch-all)
+is already in the emitted `.vercel/output/config.json`.
 
 [bo]: https://vercel.com/docs/build-output-api
+
+The `vercel.json` at the root exists only to keep a git-connected project off
+framework autodetection: `vite` is a dependency, so without it Vercel would
+apply the Vite preset and its output settings instead of running the build this
+template actually has. `framework: null` selects "Other", and `buildCommand`
+pins the build to the `build` script.
 
 For a managed deploy, choose Alpic or Vercel. To run it on your own infrastructure, self-host the Docker image.
 
