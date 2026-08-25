@@ -10,22 +10,21 @@
 # release.
 #
 # This copy is the source. It is a few lines of checkout around
-# `scripts/template-contract.mjs`, which lives in the kit and holds every
+# `scripts/template-contract.ts`, which lives in the kit and holds every
 # assertion. Both this workflow and the kit's own CI run that one script, so the
 # two directions of drift cannot check different things and both report green.
 # Editing the assertions means editing the script, and this file does not change.
 
 name: template contract
 
-# `beta`, not `main`. The generator is written against that branch's layout —
-# `vite.config.ts`, `src/server.ts`, `src/views/` — and `main` is still the
-# older `server/` + `web/` + `api/` split, which it cannot absorb. When beta
-# merges down, both filters move to `main`.
+# `main` is the template's trunk and the branch the kit pins from, so both
+# filters name it. A layout change reaches a released app only through a pin
+# bump in the kit, and this is the run that happens first.
 on:
   pull_request:
-    branches: [beta]
+    branches: [main]
   push:
-    branches: [beta]
+    branches: [main]
 
 jobs:
   generates-a-working-app:
@@ -62,4 +61,4 @@ jobs:
       # then ejects and builds again with no Waniwani tooling in the tree.
       - name: Check the contract
         working-directory: kit
-        run: node scripts/template-contract.mjs --template ../template
+        run: bun scripts/template-contract.ts --template ../template
