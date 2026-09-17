@@ -63,13 +63,27 @@ On this server:
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
-| `WANIWANI_AGENT_EVE_URL` | mounts the routes | Where the runtime listens. Unset, `/agent/v1` does not exist. |
+| `WANIWANI_AGENT_EVE_URL` | mounts the routes | The runtime's origin, as this server reaches it. Unset, `/agent/v1` does not exist. |
 | `WANIWANI_API_KEY` | with the URL | Your environment key (`wwk_…`), presented to the runtime as the bearer. It never reaches a browser. |
 | `WANIWANI_PUBLIC_KEY` | with the URL | Your public key (`wwp_…`), which is what browsers present to `/agent/v1`. |
 | `WANIWANI_ALLOWED_ORIGINS` | with the URL | Comma-separated origins the chat may be served from. Exact matches, no wildcards. |
 
 A missing key, or an allowlist that names no origin, stops the server at boot and says which
 variable it was.
+
+`WANIWANI_AGENT_EVE_URL` is an origin: scheme, host and port, with nothing after it. This server
+appends `/eve/v1/...` itself, so a value ending in a path breaks every call. The runtime listens
+on 3001 inside its container, and the reference `compose.yaml` publishes that on the host at
+`127.0.0.1:3001`. Which host to name depends on where this server runs relative to it:
+
+| This server runs | Value |
+| --- | --- |
+| In the same compose file, as the snippet above | `http://eve:3001` |
+| On the host, next to the reference compose | `http://127.0.0.1:3001` |
+| On another machine in your private network | `http://agent.internal.example.com:3001` |
+
+Keep the runtime off the public internet. This server presents your environment key to it on
+every call, which is why the reference file binds it to loopback.
 
 On `eve`, `compose.yaml` fixes the Postgres and port settings, and you supply the rest:
 
