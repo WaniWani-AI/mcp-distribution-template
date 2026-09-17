@@ -20,6 +20,9 @@ const server = new McpServer(
 		version: app.version,
 	},
 	{ capabilities: {}, instructions: app.instructions },
+	// A turn on `/agent/v1` carries the conversation so far, past express's
+	// 100kb default. skybridge parses first, so this is the only place to say so.
+	{ json: { limit: "1mb" } },
 );
 
 // The knowledge-base tool is the template's, but whether it belongs in front of
@@ -43,6 +46,42 @@ if (app.search?.enabled !== false) {
 // `waniwani build` it is regenerated from the app. Must run before
 // `withWaniwani`, which wraps the already-registered handlers.
 await registerApp(server);
+
+function requireEnv(name: string): string {
+	const value = process.env[name]?.trim();
+	if (!value) {
+		throw new Error(`${name} is required when WANIWANI_AGENT_EVE_URL is set`);
+	}
+	return value;
+}
+
+// `/agent/v1` beside `/mcp`: what the chat embed on the customer's own site
+// talks to, on a deployment that runs the agent runtime. It needs a host that
+// serves this whole app on a listening port. See docs/self-hosted-agent.md.
+const eveUrl = process.env.WANIWANI_AGENT_EVE_URL?.trim();
+if (eveUrl) {
+	const { agentRouter } = await import("@waniwani/agent-adapter/express");
+	const allowedOrigins = requireEnv("WANIWANI_ALLOWED_ORIGINS")
+		.split(",")
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+	if (allowedOrigins.length === 0) {
+		throw new Error("WANIWANI_ALLOWED_ORIGINS names no origin");
+	}
+	server.use(
+		"/agent/v1",
+		agentRouter({
+			eveUrl,
+			apiKey: requireEnv("WANIWANI_API_KEY"),
+			publicKey: requireEnv("WANIWANI_PUBLIC_KEY"),
+			allowedOrigins,
+			title: app.title ?? app.name,
+			// The runtime reaches this process's own tools over `/mcp`, on the port
+			// skybridge binds, which is `__PORT` and never `PORT`.
+			mcpLoopbackUrl: `http://127.0.0.1:${process.env.__PORT?.trim() || "3000"}/mcp`,
+		}),
+	);
+}
 
 // The cast is needed because `withWaniwani` is typed against the raw MCP SDK
 // `McpServer`, while skybridge's subclass hides the SDK internals from its
