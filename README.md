@@ -42,6 +42,7 @@ src/index.css      Tailwind entry — theme tokens + base styles
 vite.config.ts     Vite + skybridge + Tailwind plugins
 alpic.json         Alpic config
 vercel.json        Vercel config
+docs/              Guides for self-hosting the website chat agent
 ```
 
 The template ships one tool out of the box — [`search`](#knowledge-base-search-tool),
@@ -142,6 +143,20 @@ options in [`src/search/index.ts`](src/search/index.ts) (`topK`, `minScore`,
 `withWaniwani(server)` wraps every registered tool to report calls to WaniWani.
 Requires `WANIWANI_API_KEY`. Call it **after** registering your tools — it walks
 the already-registered tools and wraps each handler in place.
+
+## Website chat
+
+The chat on your own site can run against an agent inside your own network, on
+the prompt, model and tools you publish in WaniWani. Set `WANIWANI_AGENT_EVE_URL`
+to the runtime's address and this server mounts `/agent/v1` beside `/mcp`, which
+is the endpoint the SDK's `ChatEmbed` talks to. Unset, nothing mounts.
+
+That route needs the whole app listening on a port of its own, because the agent
+calls this same process back on `/mcp`. Run it as a container. Alpic routes only
+`/mcp`, and the Vercel output runs the app as a function with nothing listening
+locally, so leave the variable unset on both.
+[`docs/self-hosted-agent.md`](docs/self-hosted-agent.md) has the compose file and
+the embed snippet.
 
 ## Deploy
 

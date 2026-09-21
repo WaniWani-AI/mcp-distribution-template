@@ -55,6 +55,21 @@ export type SearchOptions = {
 	 */
 	preamble?: string;
 	/**
+	 * The whole answer for the case where no passage comes back — nothing
+	 * matched, the search outran `timeoutMs`, or the knowledge base failed.
+	 *
+	 * The default is English and says only "not covered". An app serving a
+	 * regulated corpus in another language needs both halves of that in its own
+	 * words: the refusal the user reads, and where to go instead — a support
+	 * number, a broker, a claims line. This is the one reply the tool has no
+	 * passages to ground, so it is also the one the model is most tempted to fill
+	 * in from its pre-training.
+	 *
+	 * `preamble` is not applied on top. It frames retrieved passages as reference
+	 * material, and there are none here to frame.
+	 */
+	notFound?: string;
+	/**
 	 * Status text the host shows while the call is in flight, and once it has
 	 * returned. Configurable because the defaults are English and this string is
 	 * one of the few the user actually reads.
@@ -94,6 +109,9 @@ const outputSchema = {
 // Model-facing, so it says what to do next rather than only what happened: an
 // empty result is the one case where the tool has nothing to ground an answer
 // in, and that is exactly when a model is most likely to fill the gap itself.
+// English, and about the corpus rather than about any one product, because it is
+// the fallback for a template that knows neither — `notFound` is how an app says
+// this in its own language and points the user somewhere.
 const NOTHING_FOUND =
 	"Nothing in the knowledge base matched. Tell the user this isn't covered rather than answering from general knowledge.";
 
@@ -110,26 +128,45 @@ function kbOptions({
 	};
 }
 
+/** What `wani.kb.search` resolves to, named so the outcome type can be written. */
+type KbResults = Awaited<ReturnType<typeof wani.kb.search>>;
+
+/** The passages, or none — the failure is logged for the operator and dropped. */
+function passagesOf(outcome: { results: KbResults } | { error: unknown }) {
+	if ("error" in outcome) {
+		console.error("search: knowledge base unreachable", outcome.error);
+		return [];
+	}
+	return outcome.results;
+}
+
 /**
- * The matching passages, or none if the search outran `timeoutMs`.
+ * The matching passages, or none — whether nothing matched, the search outran
+ * `timeoutMs`, or the knowledge base failed outright.
  *
  * A vector search that has gone slow is worse than one that found nothing: the
  * turn stays open while the user waits on it. The SDK call cannot be aborted, so
  * the loser of the race is abandoned rather than cancelled — which is why the
  * real call is folded into a promise that cannot reject. An abandoned rejection
  * is an unhandled one, and Node ends the process over that under
- * `--unhandled-rejections=strict`. A genuine search failure still throws.
+ * `--unhandled-rejections=strict`.
+ *
+ * A knowledge base that errors degrades the same way rather than throwing. An
+ * exception here reaches the host as an MCP tool error, which it renders to the
+ * user as trouble reaching its tools — and the model, told only that its tools
+ * are broken, answers the product question from pre-training instead. A corpus
+ * that cannot be reached grounds no answer, which is what the empty case already
+ * says, so the outage is reported to the log and the turn gets `notFound`.
  */
 async function searchWithin(query: string, options: SearchOptions) {
-	const search = wani.kb.search(query, kbOptions(options));
-	if (!options.timeoutMs) {
-		return search;
-	}
-
-	const settled = search.then(
+	const settled = wani.kb.search(query, kbOptions(options)).then(
 		(results) => ({ results }),
 		(error: unknown) => ({ error }),
 	);
+	if (!options.timeoutMs) {
+		return passagesOf(await settled);
+	}
+
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	const expired = new Promise<"expired">((resolve) => {
 		timer = setTimeout(() => resolve("expired"), options.timeoutMs);
@@ -138,12 +175,12 @@ async function searchWithin(query: string, options: SearchOptions) {
 	try {
 		const first = await Promise.race([settled, expired]);
 		if (first === "expired") {
+			console.error(
+				`search: knowledge base did not answer within ${options.timeoutMs}ms`,
+			);
 			return [];
 		}
-		if ("error" in first) {
-			throw first.error;
-		}
-		return first.results;
+		return passagesOf(first);
 	} finally {
 		clearTimeout(timer);
 	}
@@ -179,9 +216,13 @@ export function searchTool(options: SearchOptions = {}) {
 			const results = await searchWithin(query, options);
 
 			if (results.length === 0) {
+				// `notFound` replaces this text whole rather than being framed by
+				// `preamble`: the preamble's job is to mark retrieved passages as
+				// reference material, and an empty result has none to mark.
+				const nothingFound = options.notFound ?? NOTHING_FOUND;
 				return {
-					structuredContent: { results: [], answerText: NOTHING_FOUND },
-					content: [{ type: "text" as const, text: NOTHING_FOUND }],
+					structuredContent: { results: [], answerText: nothingFound },
+					content: [{ type: "text" as const, text: nothingFound }],
 				};
 			}
 

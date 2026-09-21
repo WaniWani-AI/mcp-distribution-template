@@ -2,12 +2,13 @@
 
 FROM oven/bun:1 AS deps-prod
 WORKDIR /app
-COPY package.json bun.lock ./
+# A kit build ships this tree without a lockfile; the raw template and an ejected repo carry one.
+COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile --production
 
 FROM oven/bun:1 AS builder
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
