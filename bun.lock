@@ -1,13 +1,12 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "apps-sdk-template",
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.29.0",
         "@waniwani/agent-adapter": "0.1.0-beta.2",
-        "@waniwani/sdk": "^0.19.8",
+        "@waniwani/sdk": "^0.22.1",
         "dotenv": "^17.4.1",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
@@ -260,7 +259,7 @@
 
     "@waniwani/agent-adapter": ["@waniwani/agent-adapter@0.1.0-beta.2", "", { "dependencies": { "jose": "6.1.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": ">=1.29.0", "cors": "^2.8.5", "express": "^5" } }, "sha512-7M1751XhZ+Z0OoL00vEdn2z5h07jtyLR0AK5tyhDpDKxAS7AeMEvL6KKVLFWa986hFNvKfSPZL4kgiMan0fRZA=="],
 
-    "@waniwani/sdk": ["@waniwani/sdk@0.19.8", "", { "peerDependencies": { "@ai-sdk/mcp": ">=1.0.0", "@ai-sdk/react": ">=1.0.0", "@modelcontextprotocol/ext-apps": "~1.5.0", "@modelcontextprotocol/sdk": "~1.29.0", "ai": ">=6.0.141", "react": ">=18.0.0", "skybridge": ">=0.35.0", "zod": ">=4.0.0" }, "optionalPeers": ["@ai-sdk/mcp", "@ai-sdk/react", "@modelcontextprotocol/ext-apps", "@modelcontextprotocol/sdk", "ai", "react", "skybridge", "zod"] }, "sha512-i0uBp6SiMInm0ZyqBhq0VD0ekpMPfAynJuYsZAEKdatjnUO8IpOWt7A7rbY56QZZPeTZIMU5l4CG1zksnu68vA=="],
+    "@waniwani/sdk": ["@waniwani/sdk@0.22.1", "", { "peerDependencies": { "@ai-sdk/mcp": ">=1.0.0", "@ai-sdk/react": ">=1.0.0", "@modelcontextprotocol/sdk": "^1.29.0", "ai": ">=6.0.141", "react": ">=18.0.0", "skybridge": ">=0.35.0", "zod": ">=4.0.0" }, "optionalPeers": ["@ai-sdk/mcp", "@ai-sdk/react", "@modelcontextprotocol/sdk", "ai", "react", "skybridge", "zod"] }, "sha512-ZZkDE4nJdmHiZQW91SUv/jUjMBdbijgqUuicLdYUPUazwOuhjOALy9MV1j4W1ucCs+vLWFWIdeQID4N2od+rUA=="],
 
     "accepts": ["accepts@2.0.0", "", { "dependencies": { "mime-types": "^3.0.0", "negotiator": "^1.0.0" } }, "sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng=="],
 
