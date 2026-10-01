@@ -147,5 +147,8 @@ services:
     image: ghcr.io/waniwani-ai/agent:0.1.0-beta.2
 ```
 
-with `"@waniwani/agent-adapter": "0.1.0-beta.2"` in `package.json`. Both are pinned exactly. The
+with `"@waniwani/agent-adapter": "0.1.0-beta.2"` in `package.json`. Only a self-hosted
+deployment needs that package, so the template does not declare it: add it with
+`bun add @waniwani/agent-adapter@0.1.0-beta.2`, and the server refuses to start without it
+while `WANIWANI_AGENT_EVE_URL` is set. Both are pinned exactly. The
 image has no moving tag, and the package's `beta` tag moves with every release.

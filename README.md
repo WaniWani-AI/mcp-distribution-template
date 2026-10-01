@@ -150,6 +150,8 @@ The chat on your own site can run against an agent inside your own network, on
 the prompt, model and tools you publish in WaniWani. Set `WANIWANI_AGENT_EVE_URL`
 to the runtime's address and this server mounts `/agent/v1` beside `/mcp`, which
 is the endpoint the SDK's `ChatEmbed` talks to. Unset, nothing mounts.
+That mode also needs `bun add @waniwani/agent-adapter@0.1.0-beta.2`, which
+the template leaves out so no other deployment has to install it.
 
 That route needs the whole app listening on a port of its own, because the agent
 calls this same process back on `/mcp`. Run it as a container. Alpic routes only
