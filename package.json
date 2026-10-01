@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
-    "@waniwani/agent-adapter": "0.1.0-beta.2",
     "@waniwani/sdk": "^0.22.1",
     "dotenv": "^17.4.1",
     "react": "^19.2.4",

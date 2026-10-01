@@ -55,12 +55,55 @@ function requireEnv(name: string): string {
 	return value;
 }
 
+type RequestHandler = Parameters<McpServer["use"]>[1];
+
+interface AgentAdapter {
+	agentRouter(options: {
+		eveUrl: string;
+		apiKey: string;
+		publicKey: string;
+		allowedOrigins: string[];
+		title: string;
+		mcpLoopbackUrl: string;
+	}): RequestHandler;
+}
+
+// Only a self-hosted deployment installs the adapter, so the specifier is a
+// variable to keep `tsc` from resolving it on every other app.
+const AGENT_ADAPTER = "@waniwani/agent-adapter/express";
+
+async function loadAgentAdapter(): Promise<AgentAdapter> {
+	let loaded: unknown;
+	try {
+		loaded = await import(AGENT_ADAPTER);
+	} catch (error) {
+		throw new Error(
+			"WANIWANI_AGENT_EVE_URL is set, so this server needs @waniwani/agent-adapter. " +
+				"Install it with `bun add @waniwani/agent-adapter@0.1.0-beta.2` (see docs/self-hosted-agent.md).",
+			{ cause: error },
+		);
+	}
+	if (!isAgentAdapter(loaded)) {
+		throw new Error("@waniwani/agent-adapter/express exports no agentRouter");
+	}
+	return loaded;
+}
+
+function isAgentAdapter(value: unknown): value is AgentAdapter {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"agentRouter" in value &&
+		typeof value.agentRouter === "function"
+	);
+}
+
 // `/agent/v1` beside `/mcp`: what the chat embed on the customer's own site
 // talks to, on a deployment that runs the agent runtime. It needs a host that
 // serves this whole app on a listening port. See docs/self-hosted-agent.md.
 const eveUrl = process.env.WANIWANI_AGENT_EVE_URL?.trim();
 if (eveUrl) {
-	const { agentRouter } = await import("@waniwani/agent-adapter/express");
+	const { agentRouter } = await loadAgentAdapter();
 	const allowedOrigins = requireEnv("WANIWANI_ALLOWED_ORIGINS")
 		.split(",")
 		.map((origin) => origin.trim())
