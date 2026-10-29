@@ -111,7 +111,8 @@ configuration lives in `src/index.css`:
 - `@theme` defines the design tokens. Each one generates utilities, so
   `--color-ink` gives you `text-ink` / `bg-ink` and `--font-sans` gives you
   `font-sans`. **Rebrand the template by editing these values** — the shipped
-  set (`ink`, `ink-muted`, `surface`, `surface-muted`, Inter) is a placeholder.
+  set (`ink`, `ink-muted`, `surface`, `surface-muted`) is a placeholder, and
+  `--font-sans` is the system font stack ChatGPT itself uses.
 - `@custom-variant dark` points the `dark:` variant at a `.dark` class instead
   of the OS `prefers-color-scheme`, because the chat client hands the colour
   scheme to the view rather than to the browser. Read it with skybridge's
@@ -126,6 +127,45 @@ return <div className={theme === "dark" ? "dark" : ""}>{/* … */}</div>;
 
 Utility classes are the default; reach for plain CSS in `src/index.css` only for
 things utilities can't express (keyframes, third-party overrides).
+
+### Brand fonts: self-host
+
+A view never loads a font from a CDN (`fonts.googleapis.com`, `use.typekit.net`,
+…). Every widget card would send the end user's IP to that third party, which
+the client's privacy documents then have to list, and the widget CSP has to
+allow it. Ship the font files with the app instead: Vite emits them next to
+`style.css` and the CSS points at them with a relative `url()`, so they load
+from the app's own origin, which the CSP already allows.
+
+From npm, with [Fontsource](https://fontsource.org):
+
+```bash
+npm install @fontsource-variable/inter
+```
+
+```css
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans:
+    "Inter Variable", ui-sans-serif, -apple-system, system-ui, "Segoe UI",
+    "Noto Sans", Helvetica, Arial, sans-serif;
+}
+```
+
+Or from the brand's own files, put next to the stylesheet (`src/fonts/`):
+
+```css
+@font-face {
+  font-family: "Brand Sans";
+  src: url("./fonts/brand-sans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+```
+
+Check the font's licence allows embedding before you ship it.
 
 ## Knowledge base (`search` tool)
 
