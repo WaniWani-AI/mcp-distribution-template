@@ -135,7 +135,13 @@ A view never loads a font from a CDN (`fonts.googleapis.com`, `use.typekit.net`,
 the client's privacy documents then have to list, and the widget CSP has to
 allow it. Ship the font files with the app instead: Vite emits them next to
 `style.css` and the CSS points at them with a relative `url()`, so they load
-from the app's own origin, which the CSP already allows.
+from the app's own origin, which the CSP already allows. `vite.config.ts` never
+inlines a font as a `data:` URI, because the widget CSP has no `font-src data:`.
+
+An app built with `@waniwani/kit` does not edit this file: every app shares it.
+It sets its client's face with `fonts` in `defineApp()`, and the kit layers it
+over these tokens for that app only (see the kit README, "A client's own
+fonts"). The snippets below are for a project that owns its `src/index.css`.
 
 From npm, with [Fontsource](https://fontsource.org):
 
