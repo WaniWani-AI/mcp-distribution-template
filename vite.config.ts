@@ -26,5 +26,11 @@ export default defineConfig({
 		// files. The limit is raised rather than the warning disabled: at 800 kB it
 		// still fires on a view that has genuinely grown.
 		chunkSizeWarningLimit: 800,
+		// A font file is always emitted, never inlined as a `data:` URI, however
+		// small. The MCP Apps widget CSP allows fonts from the server's origin but
+		// has no `font-src data:`, so an inlined face is blocked. Other assets keep
+		// Vite's 4 kB default.
+		assetsInlineLimit: (file) =>
+			/\.(woff2?|ttf|otf)$/i.test(file) ? false : undefined,
 	},
 });
