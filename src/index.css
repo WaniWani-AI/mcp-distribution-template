@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /* The host chat client hands the colour scheme to the view (`useLayout().theme`)
@@ -10,7 +9,12 @@
    `text-ink` / `bg-ink`, `--font-sans` gives you `font-sans`. Rebrand the
    template by editing these values. */
 @theme {
-	--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+	/* The system face, as in ChatGPT's own UI: no font request leaves the
+	   widget. A brand font is self-hosted, never loaded from a font CDN (see
+	   README, "Brand fonts: self-host"). */
+	--font-sans:
+		ui-sans-serif, -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica,
+		Arial, sans-serif;
 
 	--color-ink: #0a1334;
 	--color-ink-muted: #5a628a;

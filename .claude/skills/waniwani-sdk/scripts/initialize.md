@@ -12,7 +12,7 @@ Ask the following questions **one at a time**. After each answer, move to the ne
 
 **As soon as the user provides a URL**, launch a **background agent** to:
 - Visit the website and take screenshots
-- Extract: primary/accent colors, logo URL, fonts, brand tone (formal/casual/playful), tagline
+- Extract: primary/accent colors, logo URL, fonts (family name and where the site loads the files from), brand tone (formal/casual/playful), tagline
 - Look at navigation structure for product/service categories
 - Check for existing pricing pages, quote forms, or booking flows
 - Note any relevant API endpoints or integrations visible in the page source
@@ -274,7 +274,7 @@ Styling is Tailwind CSS v4 with no config file: the theme lives in the CSS entry
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: {extracted-font}, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, -apple-system, system-ui, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
 
   --color-brand-primary: {extracted-primary-color};
   --color-brand-accent: {extracted-accent-color};
@@ -283,7 +283,7 @@ Styling is Tailwind CSS v4 with no config file: the theme lives in the CSS entry
 }
 ```
 
-Apply the brand colors and tone extracted from the user's website by the background agent. Write plain CSS here only for what utilities can't express (keyframes, third-party overrides) -- everything else belongs in `className`.
+Apply the brand colors and tone extracted from the user's website by the background agent. Keep the system font stack above unless the brand font matters to the client. If it does, self-host it: `@import "@fontsource-variable/<font>";` when Fontsource has it, otherwise `@font-face` with woff2 files under `src/fonts/` and a relative `url()`, then put its family first in `--font-sans`. Never `@import` or `<link>` a font CDN (Google Fonts, Adobe Fonts, the brand's own CDN): it sends every end user's IP to a third party and the kit's check warns on it. See README, "Brand fonts: self-host". Write plain CSS here only for what utilities can't express (keyframes, third-party overrides) -- everything else belongs in `className`.
 
 ## Step 7: Register Everything in `server/src/app.ts`
 
