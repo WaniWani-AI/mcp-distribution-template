@@ -26,6 +26,12 @@ export default defineConfig({
 		// files. The limit is raised rather than the warning disabled: at 800 kB it
 		// still fires on a view that has genuinely grown.
 		chunkSizeWarningLimit: 800,
+		// Views are served publicly from `/assets`, so a map there hands the
+		// widget's source to anyone who opens devtools on the host page. Only a
+		// Vercel preview build (staging) emits them. Production, and every build
+		// off Vercel (Docker, Alpic, a local `build`), has no `VERCEL_ENV` of
+		// "preview" and ships none.
+		sourcemap: process.env.VERCEL_ENV === "preview",
 		// A font file is always emitted, never inlined as a `data:` URI, however
 		// small. The MCP Apps widget CSP allows fonts from the server's origin but
 		// has no `font-src data:`, so an inlined face is blocked. Other assets keep
