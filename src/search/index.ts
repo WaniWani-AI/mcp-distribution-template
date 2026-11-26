@@ -9,8 +9,8 @@ import { wani } from "../lib/waniwani.js";
 // than personalized flows.
 //
 // Named `search`, titled, described and annotated the way the Apps SDK asks for
-// — a verb for a name, a human-readable title, a description that says when NOT
-// to call it as well as when to, hint annotations that match what the handler
+// — a verb for a name, a human-readable title, a description that says what it
+// holds and what it does not, hint annotations that match what the handler
 // actually does, and the two `openai/toolInvocation` strings so the host has
 // something to show while the search runs instead of inventing its own label.
 // https://developers.openai.com/apps-sdk/app-guidelines
@@ -192,7 +192,7 @@ export function searchTool(options: SearchOptions = {}) {
 			name: "search",
 			title: "Search knowledge base",
 			description:
-				"Search the knowledge base and return the passages that match a query. Use this for general questions about the product or service — what it covers, pricing, eligibility, policy details, and the like. Answer only from the passages it returns, and if it returns none, say the knowledge base doesn't cover the question instead of answering from general knowledge. Do not use it for anything specific to this user's own account or records.",
+				"Search the knowledge base and return the passages that match a query. Use this for general questions about the product or service — what it covers, pricing, eligibility, policy details, and the like. It holds nothing specific to this user's own account or records.",
 			inputSchema,
 			outputSchema,
 			// The hints have to match the handler, or a submission gets rejected over
